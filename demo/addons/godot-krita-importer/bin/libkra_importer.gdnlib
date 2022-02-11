@@ -1,0 +1,18 @@
+[general]
+
+singleton=false
+load_once=true
+symbol_prefix="godot_"
+reloadable=false
+
+[entry]
+
+OSX.64="res://addons/godot-krita-importer/bin/osx/libkra_importer.dylib"
+Windows.64="res://addons/godot-krita-importer/bin/win64/libkra_importer.dll"
+X11.64="res://addons/godot-krita-importer/bin/x11/libkra_importer.so"
+
+[dependencies]
+
+OSX.64=[  ]
+Windows.64=[  ]
+X11.64=[  ]

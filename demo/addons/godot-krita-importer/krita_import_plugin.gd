@@ -7,6 +7,8 @@
 tool
 extends EditorImportPlugin
 
+const KraImporter = preload("res://addons/godot-krita-importer/bin/libkra_importer.gdns")
+
 func get_import_options(preset : int) -> Array:
 	return [{"name": "my_option", "default_value": false}]
 
@@ -41,4 +43,8 @@ func get_visible_name() -> String:
 	return "Scene from Krita"
 
 func import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
+	var importer = KraImporter.new()
+
+	importer.load(source_file)
+
 	return 0
