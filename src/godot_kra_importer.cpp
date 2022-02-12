@@ -52,6 +52,20 @@ Dictionary KraImporter::get_layer_data(int p_layer_index)
         exported_layer = document->get_exported_layer(p_layer_index);
 
         layer_data["name"] = exported_layer->name;
+        unsigned int width = exported_layer->right - exported_layer->left;
+        layer_data["width"] = width;
+        unsigned int height = exported_layer->bottom - exported_layer->top;
+        layer_data["height"] = height;
+
+        layer_data["position"] = Vector2(exported_layer->left, exported_layer->top);
+
+        int bytes = width * height * exported_layer->channelCount;
+        PoolByteArray arr = PoolByteArray();
+        arr.resize(bytes);
+        PoolByteArray::Write write = arr.write();
+        memcpy(write.ptr(), exported_layer->data.get(), bytes);
+
+        layer_data["data"] = arr;
     }
 
     return layer_data;

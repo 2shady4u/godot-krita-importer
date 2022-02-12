@@ -9,6 +9,21 @@ func _ready():
 
 	print(importer.layer_count)
 
-	for i in range(0, importer.layer_count):
-		var data = importer.get_layer_data(i)
-		print(data.name)
+	for i in range(importer.layer_count - 1, -1, -1):
+		var layer_data = importer.get_layer_data(i)
+
+		var sprite = Sprite.new()
+		sprite.name = layer_data.name
+		sprite.position = layer_data.position
+
+		var image = Image.new()
+		#print(layer_data)
+		#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
+		image.create_from_data(layer_data.width, layer_data.height, false, Image.FORMAT_RGBA8, layer_data.data)
+
+		var texture = ImageTexture.new()
+		texture.create_from_image(image)
+
+		sprite.texture = texture
+
+		add_child(sprite)
