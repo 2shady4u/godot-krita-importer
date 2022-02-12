@@ -2,6 +2,7 @@
 #define KRA_IMPORTER_H
 
 #include <Godot.hpp>
+#include <ProjectSettings.hpp>
 
 #include <codecvt>
 #include <locale>
@@ -19,6 +20,8 @@ namespace godot
         std::unique_ptr<KraFile> document;
 
     public:
+        int layer_count;
+
         static void _register_methods();
 
         KraImporter();
@@ -27,6 +30,11 @@ namespace godot
         void _init();
 
         void load(String p_path);
+
+        Dictionary get_layer_data(int p_layer_index);
+
+        void set_layer_count(int p_layer_count);
+        int get_layer_count();
     };
 
 }
