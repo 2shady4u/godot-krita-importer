@@ -1,6 +1,6 @@
-[submodule "src/libkra"]
-	path = src/libkra
-	url = https://github.com/2shady4u/libkra.git
 [submodule "godot-cpp"]
 	path = godot-cpp
 	url = https://github.com/godotengine/godot-cpp.git
+[submodule "libkra"]
+	path = libkra
+	url = https://github.com/2shady4u/libkra.git

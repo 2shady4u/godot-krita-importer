@@ -147,6 +147,7 @@ opts.Add(PathVariable(
 # Local dependency paths, adapt them to your setup
 godot_headers_path = "godot-cpp/godot-headers/"
 cpp_bindings_path = "godot-cpp/"
+libkra_path = "libkra/"
 
 # Updates the environment with the option variables.
 opts.Update(env)
@@ -184,6 +185,9 @@ if env['platform'] == 'linux':
         env['CXX'] = 'clang++'
 
     env.Append(CCFLAGS=['-fPIC'])
+    # To compile zlib on Linux without any warning, an additional compiler flag needs to be added here!
+    # This is similar to the exact same compiler flag added for macOS targets... except without the crash!
+    env.Append(CCFLAGS=['-DHAVE_UNISTD_H'])
     env.Append(CXXFLAGS=['-std=c++17'])
     if env['target'] == 'debug':
         env.Append(CCFLAGS = ['-g3','-Og'])
@@ -217,6 +221,9 @@ elif env['platform'] == 'osx':
         env.Append(LINKFLAGS=["-arch", env["macos_arch"]])
         env.Append(CCFLAGS=["-arch", env["macos_arch"]])
 
+    # For compiling zlib on macOS, an additional compiler flag needs to be added!
+    # See: https://github.com/HaxeFoundation/hxcpp/issues/723
+    env.Append(CCFLAGS=['-DHAVE_UNISTD_H'])
     env.Append(CXXFLAGS=['-std=c++17'])
 
     if env['macos_deployment_target'] != 'default':
@@ -291,7 +298,8 @@ env.Append(CPPPATH=[
     godot_headers_path, 
     cpp_bindings_path + 'include/', 
     cpp_bindings_path + 'include/core/', 
-    cpp_bindings_path + 'include/gen/'
+    cpp_bindings_path + 'include/gen/',
+    libkra_path + 'zlib/'
 ])
 env.Append(CPPPATH=['src/'])
 
@@ -304,7 +312,14 @@ cpp_bindings_libname = 'libgodot-cpp.{}.{}.{}'.format(
 env.Append(LIBS=[cpp_bindings_libname])
 env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
 
-sources = [Glob('src/*.cpp')]
+sources = [
+    Glob('src/*.cpp'),
+    Glob(libkra_path + 'zlib/*.c'),
+    Glob(libkra_path + 'src/Kra/*.cpp'),
+    libkra_path + 'src/tinyxml2/tinyxml2.cpp',
+    libkra_path + 'zlib/contrib/minizip/unzip.c',
+    libkra_path + 'zlib/contrib/minizip/ioapi.c'
+]
 
 ###############
 #BUILD LIB#####

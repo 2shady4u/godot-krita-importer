@@ -5,4 +5,4 @@ const KraImporter = preload("res://addons/godot-krita-importer/bin/libkra_import
 func _ready():
 	var importer := KraImporter.new()
 
-	importer.load("whatever")
+	importer.load("KraExample.Kra")
