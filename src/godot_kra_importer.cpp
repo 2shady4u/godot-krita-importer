@@ -59,7 +59,10 @@ Dictionary KraImporter::get_layer_data(int p_layer_index)
 
         layer_data["position"] = Vector2(exported_layer->left, exported_layer->top);
 
-        int bytes = width * height * exported_layer->channelCount;
+        layer_data["opacity"] = exported_layer->opacity;
+        layer_data["visible"] = exported_layer->visible;
+
+        int bytes = width * height * exported_layer->channel_count;
         PoolByteArray arr = PoolByteArray();
         arr.resize(bytes);
         PoolByteArray::Write write = arr.write();

@@ -13,8 +13,12 @@ func _ready():
 		var layer_data = importer.get_layer_data(i)
 
 		var sprite = Sprite.new()
-		sprite.name = layer_data.name
-		sprite.position = layer_data.position
+		sprite.name = layer_data.get("name", sprite.name)
+		sprite.position = layer_data.get("position", Vector2.ZERO)
+		sprite.centered = false
+
+		sprite.visible = layer_data.get("visible", true)
+		sprite.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
 		var image = Image.new()
 		#print(layer_data)
