@@ -44,7 +44,41 @@ func get_visible_name() -> String:
 
 func import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
 	var importer = KraImporter.new()
+	var scene := PackedScene.new()
+	var node := Node2D.new()
+	node.name = source_file.get_file().get_basename()
 
 	importer.load(source_file)
 
-	return 0
+	print(importer.layer_count)
+
+	for i in range(importer.layer_count - 1, -1, -1):
+		var layer_data = importer.get_layer_data(i)
+
+		import_layer(layer_data, node)
+
+	scene.pack(node)
+	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], scene)
+
+func import_layer(layer_data : Dictionary, node : Node2D):
+	var sprite = Sprite.new()
+	sprite.name = layer_data.get("name", sprite.name)
+	sprite.position = layer_data.get("position", Vector2.ZERO)
+	sprite.centered = false
+
+	sprite.visible = layer_data.get("visible", true)
+	sprite.modulate.a = layer_data.get("opacity", 255.0)/255.0
+
+	var image = Image.new()
+	#print(layer_data)
+	#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
+	image.create_from_data(layer_data.width, layer_data.height, false, Image.FORMAT_RGBA8, layer_data.data)
+
+	var texture = ImageTexture.new()
+	texture.create_from_image(image)
+
+	sprite.texture = texture
+
+	node.add_child(sprite)
+
+	sprite.owner = node
