@@ -62,6 +62,17 @@ Dictionary KraImporter::get_layer_data(int p_layer_index)
         layer_data["opacity"] = exported_layer->opacity;
         layer_data["visible"] = exported_layer->visible;
 
+        switch (exported_layer->channel_count)
+        {
+            case 4:
+                layer_data["format"] = Image::FORMAT_RGBA8;
+                break;
+            case 3:
+                /* This might actually not be possible! */
+                layer_data["format"] = Image::FORMAT_RGB8;
+                break;
+        }
+
         int bytes = width * height * exported_layer->channel_count;
         PoolByteArray arr = PoolByteArray();
         arr.resize(bytes);

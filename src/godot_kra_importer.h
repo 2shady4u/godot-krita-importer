@@ -3,6 +3,7 @@
 
 #include <Godot.hpp>
 #include <ProjectSettings.hpp>
+#include <Image.hpp>
 
 #include <codecvt>
 #include <locale>

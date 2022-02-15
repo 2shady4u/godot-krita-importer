@@ -72,7 +72,7 @@ func import_layer(layer_data : Dictionary, node : Node2D):
 	var image = Image.new()
 	#print(layer_data)
 	#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
-	image.create_from_data(layer_data.width, layer_data.height, false, Image.FORMAT_RGBA8, layer_data.data)
+	image.create_from_data(layer_data.width, layer_data.height, false, layer_data.format, layer_data.data)
 
 	var texture = ImageTexture.new()
 	texture.create_from_image(image)
