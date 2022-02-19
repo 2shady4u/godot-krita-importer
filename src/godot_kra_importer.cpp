@@ -5,7 +5,8 @@ using namespace godot;
 void KraImporter::_register_methods()
 {
     register_method("load", &KraImporter::load);
-    register_method("get_layer_data", &KraImporter::get_layer_data);
+    register_method("get_layer_data_at", &KraImporter::get_layer_data_at);
+    register_method("get_layer_data_with_uuid", &KraImporter::get_layer_data_with_uuid);
 
     register_property<KraImporter, int>("layer_count", &KraImporter::set_layer_count, &KraImporter::get_layer_count, 0);
 }
@@ -36,41 +37,61 @@ void KraImporter::load(String p_path)
     document->load(ws);
 }
 
-Dictionary KraImporter::get_layer_data(int p_layer_index)
+Dictionary KraImporter::get_layer_data_at(int p_layer_index)
 {
-    Dictionary layer_data;
-
     if (p_layer_index < 0 || p_layer_index >= document->layers.size())
     {
         Godot::print("layer index is out of bounds");
+        return Dictionary();
     }
-    else 
+    else
     {
         Godot::print("layer index is inside of the bounds");
 
         std::unique_ptr<KraExportedLayer> exported_layer = std::make_unique<KraExportedLayer>();
-        exported_layer = document->get_exported_layer(p_layer_index);
+        exported_layer = document->get_exported_layer_at(p_layer_index);
 
-        layer_data["name"] = exported_layer->name;
-        unsigned int width = exported_layer->right - exported_layer->left;
-        layer_data["width"] = width;
-        unsigned int height = exported_layer->bottom - exported_layer->top;
-        layer_data["height"] = height;
+        return _get_layer_data(exported_layer);
+    }
+}
 
-        layer_data["position"] = Vector2(exported_layer->left, exported_layer->top);
+Dictionary KraImporter::get_layer_data_with_uuid(String p_uuid)
+{
+    std::unique_ptr<KraExportedLayer> exported_layer = std::make_unique<KraExportedLayer>();
+    exported_layer = document->get_exported_layer_with_uuid(p_uuid.alloc_c_string());
 
-        layer_data["opacity"] = exported_layer->opacity;
-        layer_data["visible"] = exported_layer->visible;
+    return _get_layer_data(exported_layer);
+}
 
+Dictionary KraImporter::_get_layer_data(const std::unique_ptr<KraExportedLayer> &exported_layer)
+{
+    Dictionary layer_data;
+
+    layer_data["type"] = exported_layer->type;
+    layer_data["name"] = String(exported_layer->name.c_str());
+    unsigned int width = exported_layer->right - exported_layer->left;
+    layer_data["width"] = width;
+    unsigned int height = exported_layer->bottom - exported_layer->top;
+    layer_data["height"] = height;
+
+    layer_data["position"] = Vector2(exported_layer->left, exported_layer->top);
+
+    layer_data["opacity"] = exported_layer->opacity;
+    layer_data["visible"] = exported_layer->visible;
+
+    switch (exported_layer->type)
+    {
+    case kra::PAINT_LAYER:
+    {
         switch (exported_layer->channel_count)
         {
-            case 4:
-                layer_data["format"] = Image::FORMAT_RGBA8;
-                break;
-            case 3:
-                /* This might actually not be possible! */
-                layer_data["format"] = Image::FORMAT_RGB8;
-                break;
+        case 4:
+            layer_data["format"] = Image::FORMAT_RGBA8;
+            break;
+        case 3:
+            /* This might actually not be possible! */
+            layer_data["format"] = Image::FORMAT_RGB8;
+            break;
         }
 
         int bytes = width * height * exported_layer->channel_count;
@@ -80,6 +101,21 @@ Dictionary KraImporter::get_layer_data(int p_layer_index)
         memcpy(write.ptr(), exported_layer->data.get(), bytes);
 
         layer_data["data"] = arr;
+        break;
+    }
+    case kra::GROUP_LAYER:
+    {
+        int bytes = exported_layer->child_uuids.size();
+        PoolStringArray arr = PoolStringArray();
+        for (const auto &uuid : exported_layer->child_uuids)
+        {
+            arr.push_back(uuid.c_str());
+        }
+        layer_data["child_uuids"] = arr;
+        break;
+    }
+    default:
+        break;
     }
 
     return layer_data;

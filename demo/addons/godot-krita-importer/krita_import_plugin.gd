@@ -53,14 +53,44 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 	print(importer.layer_count)
 
 	for i in range(importer.layer_count - 1, -1, -1):
-		var layer_data = importer.get_layer_data(i)
+		var layer_data : Dictionary = importer.get_layer_data_at(i)
 
-		import_layer(layer_data, node)
+		match(layer_data.get("type", -1)):
+			0:
+				var sprite : Sprite = import_paint_layer(layer_data)
+				node.add_child(sprite)
+			1:
+				var child_node : Node2D = import_group_layer(importer, layer_data)
+				node.add_child(child_node)
+
+	# All the children need to have to node as its owner!
+	set_owner_recursively(node, node)
 
 	scene.pack(node)
 	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], scene)
 
-func import_layer(layer_data : Dictionary, node : Node2D):
+func import_group_layer(importer : KraImporter, layer_data : Dictionary) -> Node2D:
+	var node = Node2D.new()
+	node.name = layer_data.get("name", node.name)
+
+	node.visible = layer_data.get("visible", true)
+	node.modulate.a = layer_data.get("opacity", 255.0)/255.0
+
+	var child_uuids : PoolStringArray = layer_data.get("child_uuids", PoolStringArray())
+	for uuid in child_uuids:
+		print(uuid)
+		var child_data : Dictionary = importer.get_layer_data_with_uuid(uuid)
+		match(child_data.get("type", -1)):
+			0:
+				var sprite : Sprite = import_paint_layer(child_data)
+				node.add_child(sprite)
+			1:
+				var child_node : Node2D = import_group_layer(importer, child_data)
+				node.add_child(child_node)
+
+	return node
+
+func import_paint_layer(layer_data : Dictionary) -> Node2D:
 	var sprite = Sprite.new()
 	sprite.name = layer_data.get("name", sprite.name)
 	sprite.position = layer_data.get("position", Vector2.ZERO)
@@ -79,6 +109,10 @@ func import_layer(layer_data : Dictionary, node : Node2D):
 
 	sprite.texture = texture
 
-	node.add_child(sprite)
+	return sprite
 
-	sprite.owner = node
+func set_owner_recursively(owner : Node2D, node : Node2D):
+	for child in node.get_children():
+		child.owner = owner
+
+		set_owner_recursively(owner, child)

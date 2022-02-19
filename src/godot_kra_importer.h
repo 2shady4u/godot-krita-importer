@@ -20,6 +20,8 @@ namespace godot
     private:
         std::unique_ptr<KraFile> document;
 
+        Dictionary _get_layer_data(const std::unique_ptr<KraExportedLayer> &exported_layer);
+
     public:
         int layer_count;
 
@@ -32,7 +34,8 @@ namespace godot
 
         void load(String p_path);
 
-        Dictionary get_layer_data(int p_layer_index);
+        Dictionary get_layer_data_at(int p_layer_index);
+        Dictionary get_layer_data_with_uuid(String p_uuid);
 
         void set_layer_count(int p_layer_count);
         int get_layer_count();
