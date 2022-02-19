@@ -63,7 +63,7 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 				var child_node : Node2D = import_group_layer(importer, layer_data)
 				node.add_child(child_node)
 
-	# All the children need to have to node as its owner!
+	# All the children need to have the node as its owner!
 	set_owner_recursively(node, node)
 
 	scene.pack(node)
@@ -72,6 +72,7 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 func import_group_layer(importer : KraImporter, layer_data : Dictionary) -> Node2D:
 	var node = Node2D.new()
 	node.name = layer_data.get("name", node.name)
+	node.position = layer_data.get("position", Vector2.ZERO)
 
 	node.visible = layer_data.get("visible", true)
 	node.modulate.a = layer_data.get("opacity", 255.0)/255.0
@@ -83,9 +84,11 @@ func import_group_layer(importer : KraImporter, layer_data : Dictionary) -> Node
 		match(child_data.get("type", -1)):
 			0:
 				var sprite : Sprite = import_paint_layer(child_data)
+				sprite.position -= node.position
 				node.add_child(sprite)
 			1:
 				var child_node : Node2D = import_group_layer(importer, child_data)
+				child_node.position -= node.position
 				node.add_child(child_node)
 
 	return node

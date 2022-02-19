@@ -74,7 +74,7 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<KraExportedLayer> 
     unsigned int height = exported_layer->bottom - exported_layer->top;
     layer_data["height"] = height;
 
-    layer_data["position"] = Vector2(exported_layer->left, exported_layer->top);
+    layer_data["position"] = Vector2(exported_layer->left + (int32_t)exported_layer->x, exported_layer->top + (int32_t)exported_layer->y);
 
     layer_data["opacity"] = exported_layer->opacity;
     layer_data["visible"] = exported_layer->visible;
