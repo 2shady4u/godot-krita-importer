@@ -9,6 +9,7 @@ void KraImporter::_register_methods()
     register_method("get_layer_data_with_uuid", &KraImporter::get_layer_data_with_uuid);
 
     register_property<KraImporter, int>("layer_count", &KraImporter::set_layer_count, &KraImporter::get_layer_count, 0);
+    register_property<KraImporter, int>("verbosity_level", &KraImporter::set_verbosity_level, &KraImporter::get_verbosity_level, 0);
 }
 
 KraImporter::KraImporter()
@@ -129,4 +130,14 @@ void KraImporter::set_layer_count(int p_layer_count)
 int KraImporter::get_layer_count()
 {
     return document->layers.size();
+}
+
+void KraImporter::set_verbosity_level(int p_verbosity_level)
+{
+    kra::verbosity_level = (kra::VerbosityLevel)p_verbosity_level;
+}
+
+int KraImporter::get_verbosity_level()
+{
+    return kra::verbosity_level;
 }

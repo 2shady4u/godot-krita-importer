@@ -39,6 +39,9 @@ namespace godot
 
         void set_layer_count(int p_layer_count);
         int get_layer_count();
+
+        void set_verbosity_level(int p_verbosity_level);
+        int get_verbosity_level();
     };
 
 }

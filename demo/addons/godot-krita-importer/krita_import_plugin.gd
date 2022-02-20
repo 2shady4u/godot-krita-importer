@@ -7,6 +7,13 @@
 tool
 extends EditorImportPlugin
 
+enum VerbosityLevel {
+	QUIET,
+	NORMAL,
+	VERBOSE,
+	VERY_VERBOSE
+}
+
 const KraImporter = preload("res://addons/godot-krita-importer/bin/libkra_importer.gdns")
 
 func get_import_options(preset : int) -> Array:
@@ -44,6 +51,8 @@ func get_visible_name() -> String:
 
 func import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
 	var importer = KraImporter.new()
+	importer.verbosity_level = VerbosityLevel.QUIET
+
 	var scene := PackedScene.new()
 	var node := Node2D.new()
 	node.name = source_file.get_file().get_basename()
