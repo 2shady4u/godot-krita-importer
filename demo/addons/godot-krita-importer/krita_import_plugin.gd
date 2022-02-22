@@ -14,10 +14,15 @@ enum VerbosityLevel {
 	VERY_VERBOSE
 }
 
+const presets := [
+	{"name": "ignore_invisible_layers", "default_value": false},
+	{"name": "flags/filter", "default_value": true},
+]
+
 const KraImporter = preload("res://addons/godot-krita-importer/bin/libkra_importer.gdns")
 
 func get_import_options(preset : int) -> Array:
-	return [{"name": "my_option", "default_value": false}]
+	return presets
 
 func get_import_order() -> int:
 	return 100
@@ -66,11 +71,13 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 
 		match(layer_data.get("type", -1)):
 			0:
-				var sprite : Sprite = import_paint_layer(layer_data)
-				node.add_child(sprite)
+				var sprite : Sprite = import_paint_layer(layer_data, options)
+				if sprite != null:
+					node.add_child(sprite)
 			1:
-				var child_node : Node2D = import_group_layer(importer, layer_data)
-				node.add_child(child_node)
+				var child_node : Node2D = import_group_layer(importer, layer_data, options)
+				if child_node != null:
+					node.add_child(child_node)
 
 	# All the children need to have the node as its owner!
 	set_owner_recursively(node, node)
@@ -78,12 +85,14 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 	scene.pack(node)
 	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], scene)
 
-func import_group_layer(importer : KraImporter, layer_data : Dictionary) -> Node2D:
+func import_group_layer(importer : KraImporter, layer_data : Dictionary, options: Dictionary) -> Node2D:
 	var node = Node2D.new()
 	node.name = layer_data.get("name", node.name)
 	node.position = layer_data.get("position", Vector2.ZERO)
 
 	node.visible = layer_data.get("visible", true)
+	if not node.visible and options.get("ignore_invisible_layers", false):
+		return null
 	node.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
 	var child_uuids : PoolStringArray = layer_data.get("child_uuids", PoolStringArray())
@@ -92,23 +101,27 @@ func import_group_layer(importer : KraImporter, layer_data : Dictionary) -> Node
 		var child_data : Dictionary = importer.get_layer_data_with_uuid(uuid)
 		match(child_data.get("type", -1)):
 			0:
-				var sprite : Sprite = import_paint_layer(child_data)
-				sprite.position -= node.position
-				node.add_child(sprite)
+				var sprite : Sprite = import_paint_layer(child_data, options)
+				if sprite != null:
+					sprite.position -= node.position
+					node.add_child(sprite)
 			1:
-				var child_node : Node2D = import_group_layer(importer, child_data)
-				child_node.position -= node.position
-				node.add_child(child_node)
+				var child_node : Node2D = import_group_layer(importer, child_data, options)
+				if child_node != null:
+					child_node.position -= node.position
+					node.add_child(child_node)
 
 	return node
 
-func import_paint_layer(layer_data : Dictionary) -> Node2D:
+func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
 	var sprite = Sprite.new()
 	sprite.name = layer_data.get("name", sprite.name)
 	sprite.position = layer_data.get("position", Vector2.ZERO)
 	sprite.centered = false
 
 	sprite.visible = layer_data.get("visible", true)
+	if not sprite.visible and options.get("ignore_invisible_layers", false):
+		return null
 	sprite.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
 	var image = Image.new()
@@ -119,9 +132,21 @@ func import_paint_layer(layer_data : Dictionary) -> Node2D:
 	var texture = ImageTexture.new()
 	texture.create_from_image(image)
 
+	# Disable/enable the filter option which is positioned at the second bit position
+	if options.get("flags/filter", true):
+		texture.flags = enable_bit(texture.flags, 2)
+	else:
+		texture.flags = disable_bit(texture.flags, 2)
+
 	sprite.texture = texture
 
 	return sprite
+
+func enable_bit(mask, index):
+	return mask | (1 << index)
+
+func disable_bit(mask, index):
+	return mask & ~(1 << index)
 
 func set_owner_recursively(owner : Node2D, node : Node2D):
 	for child in node.get_children():

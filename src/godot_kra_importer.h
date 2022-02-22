@@ -9,7 +9,7 @@
 #include <locale>
 #include <memory>
 
-#include "libkra/src/Kra/kra_file.h"
+#include "libkra/src/Kra/kra_document.h"
 
 namespace godot
 {
@@ -18,7 +18,7 @@ namespace godot
         GODOT_CLASS(KraImporter, Reference)
 
     private:
-        std::unique_ptr<KraFile> document;
+        std::unique_ptr<KraDocument> document;
 
         Dictionary _get_layer_data(const std::unique_ptr<KraExportedLayer> &exported_layer);
 

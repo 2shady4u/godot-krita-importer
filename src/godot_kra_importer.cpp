@@ -22,7 +22,7 @@ KraImporter::~KraImporter()
 
 void KraImporter::_init()
 {
-    document = std::make_unique<KraFile>();
+    document = std::make_unique<KraDocument>();
 }
 
 void KraImporter::load(String p_path)
