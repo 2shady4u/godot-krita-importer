@@ -96,8 +96,9 @@ func import_group_layer(importer : KraImporter, layer_data : Dictionary, options
 	node.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
 	var child_uuids : PoolStringArray = layer_data.get("child_uuids", PoolStringArray())
-	for uuid in child_uuids:
-		print(uuid)
+	# Needs to be in reverse order as to preserve layer ordering!
+	for i in range(child_uuids.size() - 1, -1, -1):
+		var uuid : String = child_uuids[i]
 		var child_data : Dictionary = importer.get_layer_data_with_uuid(uuid)
 		match(child_data.get("type", -1)):
 			0:
@@ -134,19 +135,19 @@ func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
 
 	# Disable/enable the filter option which is positioned at the second bit position
 	if options.get("flags/filter", true):
-		texture.flags = enable_bit(texture.flags, 2)
+		texture.flags = enable_bit(texture.flags, Texture.FLAG_FILTER)
 	else:
-		texture.flags = disable_bit(texture.flags, 2)
+		texture.flags = disable_bit(texture.flags, Texture.FLAG_FILTER)
 
 	sprite.texture = texture
 
 	return sprite
 
-func enable_bit(mask, index):
-	return mask | (1 << index)
+func enable_bit(mask, flag):
+	return mask | flag
 
-func disable_bit(mask, index):
-	return mask & ~(1 << index)
+func disable_bit(mask, flag):
+	return mask & ~flag
 
 func set_owner_recursively(owner : Node2D, node : Node2D):
 	for child in node.get_children():
