@@ -22,7 +22,7 @@ KraImporter::~KraImporter()
 
 void KraImporter::_init()
 {
-    document = std::make_unique<KraDocument>();
+    document = std::make_unique<kra::KraDocument>();
 }
 
 void KraImporter::load(String p_path)
@@ -49,7 +49,7 @@ Dictionary KraImporter::get_layer_data_at(int p_layer_index)
     {
         Godot::print("layer index is inside of the bounds");
 
-        std::unique_ptr<KraExportedLayer> exported_layer = std::make_unique<KraExportedLayer>();
+        std::unique_ptr<kra::KraExportedLayer> exported_layer = std::make_unique<kra::KraExportedLayer>();
         exported_layer = document->get_exported_layer_at(p_layer_index);
 
         return _get_layer_data(exported_layer);
@@ -58,13 +58,13 @@ Dictionary KraImporter::get_layer_data_at(int p_layer_index)
 
 Dictionary KraImporter::get_layer_data_with_uuid(String p_uuid)
 {
-    std::unique_ptr<KraExportedLayer> exported_layer = std::make_unique<KraExportedLayer>();
+    std::unique_ptr<kra::KraExportedLayer> exported_layer = std::make_unique<kra::KraExportedLayer>();
     exported_layer = document->get_exported_layer_with_uuid(p_uuid.alloc_c_string());
 
     return _get_layer_data(exported_layer);
 }
 
-Dictionary KraImporter::_get_layer_data(const std::unique_ptr<KraExportedLayer> &exported_layer)
+Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::KraExportedLayer> &exported_layer)
 {
     Dictionary layer_data;
 

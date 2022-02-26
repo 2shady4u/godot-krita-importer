@@ -18,9 +18,9 @@ namespace godot
         GODOT_CLASS(KraImporter, Reference)
 
     private:
-        std::unique_ptr<KraDocument> document;
+        std::unique_ptr<kra::KraDocument> document;
 
-        Dictionary _get_layer_data(const std::unique_ptr<KraExportedLayer> &exported_layer);
+        Dictionary _get_layer_data(const std::unique_ptr<kra::KraExportedLayer> &exported_layer);
 
     public:
         int layer_count;
