@@ -315,8 +315,8 @@ env.Append(LIBPATH=[cpp_bindings_path + 'bin/'])
 sources = [
     Glob('src/*.cpp'),
     Glob(libkra_path + 'zlib/*.c'),
-    Glob(libkra_path + 'src/Kra/*.cpp'),
-    libkra_path + 'src/tinyxml2/tinyxml2.cpp',
+    Glob(libkra_path + 'libkra/*.cpp'),
+    libkra_path + 'tinyxml2/tinyxml2.cpp',
     libkra_path + 'zlib/contrib/minizip/unzip.c',
     libkra_path + 'zlib/contrib/minizip/ioapi.c'
 ]

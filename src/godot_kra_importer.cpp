@@ -22,7 +22,7 @@ KraImporter::~KraImporter()
 
 void KraImporter::_init()
 {
-    document = std::make_unique<kra::KraDocument>();
+    document = std::make_unique<kra::Document>();
 }
 
 void KraImporter::load(String p_path)
@@ -40,35 +40,32 @@ void KraImporter::load(String p_path)
 
 Dictionary KraImporter::get_layer_data_at(int p_layer_index)
 {
-    if (p_layer_index < 0 || p_layer_index >= document->layers.size())
+    if (p_layer_index >= 0 && p_layer_index < document->layers.size())
     {
-        Godot::print("layer index is out of bounds");
-        return Dictionary();
-    }
-    else
-    {
-        Godot::print("layer index is inside of the bounds");
-
-        std::unique_ptr<kra::KraExportedLayer> exported_layer = std::make_unique<kra::KraExportedLayer>();
+        std::unique_ptr<kra::ExportedLayer> exported_layer = std::make_unique<kra::ExportedLayer>();
         exported_layer = document->get_exported_layer_at(p_layer_index);
 
         return _get_layer_data(exported_layer);
+    }
+    else
+    {
+        Godot::print("Error: Index " + String(p_layer_index) + " is out of range, should be between 0 and " + String(document->layers.size()));
+        return Dictionary();
     }
 }
 
 Dictionary KraImporter::get_layer_data_with_uuid(String p_uuid)
 {
-    std::unique_ptr<kra::KraExportedLayer> exported_layer = std::make_unique<kra::KraExportedLayer>();
+    std::unique_ptr<kra::ExportedLayer> exported_layer = std::make_unique<kra::ExportedLayer>();
     exported_layer = document->get_exported_layer_with_uuid(p_uuid.alloc_c_string());
 
     return _get_layer_data(exported_layer);
 }
 
-Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::KraExportedLayer> &exported_layer)
+Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer> &exported_layer)
 {
     Dictionary layer_data;
 
-    layer_data["type"] = exported_layer->type;
     layer_data["name"] = String(exported_layer->name.c_str());
     unsigned int width = exported_layer->right - exported_layer->left;
     layer_data["width"] = width;
@@ -80,26 +77,28 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::KraExportedLa
     layer_data["opacity"] = exported_layer->opacity;
     layer_data["visible"] = exported_layer->visible;
 
+    layer_data["type"] = exported_layer->type;
+
     switch (exported_layer->type)
     {
     case kra::PAINT_LAYER:
     {
-        switch (exported_layer->channel_count)
+        switch (exported_layer->color_space)
         {
-        case 4:
+        case kra::RGBA:
             layer_data["format"] = Image::FORMAT_RGBA8;
             break;
-        case 3:
-            /* This might actually not be possible! */
-            layer_data["format"] = Image::FORMAT_RGB8;
+        case kra::CMYK:
+            // TODO: Godot doesn't support CMYKA, so we'll either have to do some conversion or return an error at some point
+            layer_data["format"] = Image::FORMAT_RGBA8;
             break;
         }
 
-        int bytes = width * height * exported_layer->channel_count;
+        int bytes = width * height * exported_layer->pixel_size;
         PoolByteArray arr = PoolByteArray();
         arr.resize(bytes);
         PoolByteArray::Write write = arr.write();
-        memcpy(write.ptr(), exported_layer->data.get(), bytes);
+        memcpy(write.ptr(), exported_layer->data.data(), bytes);
 
         layer_data["data"] = arr;
         break;
