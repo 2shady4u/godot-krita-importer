@@ -83,7 +83,10 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 	set_owner_recursively(node, node)
 
 	scene.pack(node)
-	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], scene)
+	var error := ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], scene)
+	# The node needs to be freed to avoid memory leakage
+	node.queue_free()
+	return error
 
 func import_group_layer(importer : KraImporter, layer_data : Dictionary, options: Dictionary) -> Node2D:
 	var node = Node2D.new()
