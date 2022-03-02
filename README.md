@@ -1,3 +1,5 @@
+![Godot Krita Importer banner](icon/godot-krita-importer-banner.png?raw=true "Godot Krita Importer Banner")
+
 # godot-krita-importer
 
 Plugin for Godot Engine to automatically import Krita KRA & KRZ-files
