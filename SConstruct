@@ -178,7 +178,7 @@ if host_platform == 'windows':
 ###################
 
 if env['platform'] == 'linux':
-    env['target_path'] += "x11/"
+    env['target_path'] += "linux/"
 
     if env['use_llvm']:
         env['CC'] = 'clang'
@@ -246,7 +246,7 @@ elif env['platform'] == 'osx':
         env.Append(CCFLAGS=['-O3'])
 
 elif env['platform'] == 'windows':
-    env['target_path'] += "win64/"
+    env['target_path'] += "windows/"
 
     if host_platform == 'windows' and not env['use_mingw']:
         # MSVC
