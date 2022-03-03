@@ -1,0 +1,40 @@
+name: 🔌 Sync "assetlib"-Branch with Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  assetlib:
+    name: Update "assetlib"-Branch
+    runs-on: "ubuntu-20.04"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: assetlib
+          submodules: recursive
+          lfs: true
+
+      - name: Download Release Assets
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          file: "addons.zip"
+          target: "addons.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Decompress & Commit Release Assets
+        run: |
+          unzip -o addons.zip
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A :!addons.zip
+          git commit -m "Update to latest Github Actions"
+          git tag ${{ github.event.release.tag_name }}-assetlib
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: assetlib
+          tags: true

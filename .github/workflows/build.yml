@@ -109,8 +109,8 @@ jobs:
       - name: Compress Release Assets
         run: |
           zip -r demo.zip demo/
-          cd demo/addons/godot-krita-importer/
-          zip -r bin.zip bin/
+          cd demo/
+          zip -r addons.zip addons/
       
       - name: Create Release & Upload Assets
         uses: softprops/action-gh-release@v1
@@ -123,6 +123,7 @@ jobs:
             - Second Change
           draft: false
           prerelease: false
+          token: ${{ secrets.PAT }} # Use a personal access token such that the asetlib_sync.yml is triggered by this release!
           files: |
             demo.zip
-            demo/addons/godot-krita-importer/bin.zip
+            demo/addons.zip
