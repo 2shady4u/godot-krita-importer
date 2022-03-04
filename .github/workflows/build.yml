@@ -2,6 +2,8 @@ name: 🌈 All Builds
 on:
   push:
     branches: [ master, main ]
+    tags:
+      - "v*"
 
 # Global Settings
 env:
@@ -20,16 +22,19 @@ jobs:
         include:
           - name: Windows Compilation
             os: "windows-latest"
-            artifact-name: win64
+            artifact-name: windows
+            artifact-extension: dll
             additional-python-packages: pywin32
 
           - name: Ubuntu Compilation
             os: "ubuntu-20.04"
             artifact-name: linux
+            artifact-extension: so
 
           - name: MacOS Compilation
             os: "macos-11"
             artifact-name: osx
+            artifact-extension: dylib
 
     steps:
       - name: Checkout
@@ -81,7 +86,49 @@ jobs:
           scons platform=${{ matrix.artifact-name }} target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v1
+        env:
+          ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/${{ matrix.artifact-name }}
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact-name }}
-          path: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          path: ${{ env.ARTIFACT_FOLDER }}/*.${{ matrix.artifact-extension }}
+
+  release:
+    name: Release
+    runs-on: "ubuntu-20.04"
+    needs: [build]
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          lfs: true
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: demo/addons/godot-krita-importer/bin
+
+      - name: Compress Release Assets
+        run: |
+          zip -r demo.zip demo/
+          cd demo/
+          zip -r addons.zip addons/
+      
+      - name: Create Release & Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
+          token: ${{ secrets.PAT }} # Use a personal access token such that the asetlib_sync.yml is triggered by this release!
+          files: |
+            demo.zip
+            demo/addons.zip

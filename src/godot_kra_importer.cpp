@@ -27,8 +27,6 @@ void KraImporter::_init()
 
 void KraImporter::load(String p_path)
 {
-    Godot::print("load");
-
     /* Find the real path */
     p_path = ProjectSettings::get_singleton()->globalize_path(p_path.strip_edges());
 
