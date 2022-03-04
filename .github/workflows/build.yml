@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ master, main, ci-testing ]
+    branches: [ master, main ]
     tags:
       - "v*"
 
