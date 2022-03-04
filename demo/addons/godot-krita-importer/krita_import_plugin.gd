@@ -64,8 +64,6 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 
 	importer.load(source_file)
 
-	print(importer.layer_count)
-
 	for i in range(importer.layer_count - 1, -1, -1):
 		var layer_data : Dictionary = importer.get_layer_data_at(i)
 
