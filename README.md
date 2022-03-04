@@ -11,11 +11,38 @@ Plugin for Godot Engine to automatically import Krita KRA & KRZ-files
 
 ### Table Of Contents
 
+- [How to install?](#how-to-install)
 - [How to use?](#how-to-use)
   - [Variables](#variables)
   - [Functions](#functions)
 
+# <a name="how-to-install">How to install?<a>
+
+Re-building Godot from scratch is **NOT** required, the proper way of installing this plugin is to either install it through the Asset Library or to just manually download the build files yourself.
+
+### Godot Asset Library
+
+**Godot Krita Importer** is available through the official Godot Asset Library, and can be installed in the following way:
+
+- Click on the 'AssetLib' button at the top of the editor.
+- Search for 'Godot Krita Importer' and click on the resulting element.
+- In the dialog pop-up, click 'Download'.
+- Once the download is complete, click on the install button...
+- Once more, click on the 'Install' button.
+- Activate the plugin in the 'Project Settings/Plugins'-menu.
+- All done!
+
+### Manually
+
+It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-krita-importer/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdns`-resource and that it is available in the `res://`-environment.
+
+An example project, named "demo", can also be downloaded from the releases tab.
+
 # <a name="how-to-use">How to use?</a>
+
+Godot Krita Importer automatically imports any and all files with the KRA and KRZ-extensions and this should be sufficient for most purposes.
+  
+In cases where more advanced importing functionality is wanted or required, the plugin exposes several variables and methods that hopefully allow enough freedom to easily extend the importer.
 
 ## <a name="variables">Variables</a>
 
