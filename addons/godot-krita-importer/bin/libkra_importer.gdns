@@ -1,0 +1,8 @@
+[gd_resource type="NativeScript" load_steps=2 format=2]
+
+[ext_resource path="res://addons/godot-krita-importer/bin/libkra_importer.gdnlib" type="GDNativeLibrary" id=1]
+
+[resource]
+resource_name = "libkra_importer"
+class_name = "KraImporter"
+library = ExtResource( 1 )
