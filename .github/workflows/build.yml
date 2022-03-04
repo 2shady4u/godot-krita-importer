@@ -31,6 +31,11 @@ jobs:
             artifact-name: linux
             artifact-extension: so
 
+          - name: MacOS Compilation
+            os: "macos-11"
+            artifact-name: osx
+            artifact-extension: dylib
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
