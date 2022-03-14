@@ -15,8 +15,9 @@ Plugin for Godot Engine to automatically import Krita KRA & KRZ-files
 - [How to use?](#how-to-use)
   - [Variables](#variables)
   - [Functions](#functions)
+- [FAQ](#faq)
 
-# <a name="how-to-install">How to install?<a>
+# <a name="how-to-install">How to install?</a>
 
 Re-building Godot from scratch is **NOT** required, the proper way of installing this plugin is to either install it through the Asset Library or to just manually download the build files yourself.
 
@@ -41,7 +42,11 @@ An example project, named "demo", can also be downloaded from the releases tab.
 # <a name="how-to-use">How to use?</a>
 
 Godot Krita Importer automatically imports any and all files with the KRA and KRZ-extensions and this should be sufficient for most purposes.
-  
+
+Krita                      |  Godot
+:-------------------------:|:-------------------------:
+![Krita source file](readme/krita_source_file.png?raw=true "Krita source file") | ![Imported result in Godot](readme/godot_imported_scene.png?raw=true "Imported result in Godot")
+
 In cases where more advanced importing functionality is wanted or required, the plugin exposes several variables and methods that hopefully allow enough freedom to easily extend the importer.
 
 ## <a name="variables">Variables</a>
@@ -76,3 +81,13 @@ In cases where more advanced importing functionality is wanted or required, the 
 - Dictionary layer_data = **get_layer_data_with_uuid(** String UUID **)**
 
     Return the layer_data of the layer with the given UUID.
+
+## <a name="faq">Frequently Asked Questions (FAQ)</a>
+
+### 1. Why are the colors of my imported `.kr(a/z)`-file different in Godot?
+
+The C++ library [libkra](https://github.com/2shady4u/libkra), used for importing Krita documents into Godot, does not support nor implement any conversion between [color profiles](https://en.wikipedia.org/wiki/ICC_profile). As a result, the color profile used for your Krita document should be the exact same as the one implemented in Godot otherwise the color of your pixels will different across applications.
+
+In the case of Godot, this means that you'll have to choose the `sRGB IEC61966-2.1` color profile for all your Krita documents (Image -> Properties).
+
+Future improvements in the `libkra`-library might see the implementation of color profile awareness and conversion, most likely by using the [Little CMS](https://www.littlecms.com/) library as an additional external depedency in the project.
