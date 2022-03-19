@@ -16,6 +16,7 @@ Plugin for Godot Engine to automatically import Krita KRA & KRZ-files
   - [Variables](#variables)
   - [Functions](#functions)
 - [FAQ](#faq)
+- [How to contribute?](#how-to-contribute)
 
 # <a name="how-to-install">How to install?</a>
 
@@ -91,3 +92,31 @@ The C++ library [libkra](https://github.com/2shady4u/libkra), used for importing
 In the case of Godot, this means that you'll have to choose the `sRGB IEC61966-2.1` color profile for all your Krita documents (Image -> Properties).
 
 Future improvements in the `libkra`-library might see the implementation of color profile awareness and conversion, most likely by using the [Little CMS](https://www.littlecms.com/) library as an additional external dependency in the project.
+
+### 2. Why is my favorite color space `XYZ` not supported by this plugin?
+
+Only a small selection of color space formats are currently supported by this plugin. 
+This might be because one of two possible reasons:
+
+1. The C++ `libkra`-library does not implement this format
+2. Godot does not natively support the format 
+
+Supported formats can be listed as follows:
+
+|           | Supported by `libkra`? | Supported by Godot? (`Image::Format`) |
+|-----------|:----------------------:|:-------------------------------------:|
+| `RGBA`    | :heavy_check_mark:     | `Image::FORMAT_RGBA`                  |
+| `RGBA16`  | :heavy_check_mark:     | :x:*                                  |
+| `RGBAF16` | :heavy_check_mark:     | :x:*                                  |
+| `RGBAF32` | :heavy_check_mark:     | `Image::FORMAT_RGBAF`                 |
+| `CMYK`    | :heavy_check_mark:     | :x:*                                  |
+
+\* *Godot does **not** natively support this color space format*
+
+In cases where your favorite color format `XYZ` is natively supported by Godot, but is unfortunately blatently absent from the above color space support matrix, please feel free to open an issue in this repository.
+
+# <a name="how-to-contribute">How to contribute?</a>
+
+Build instructions for all supported platforms can be found [here](docs/BUILD_INSTRUCTIONS.md).
+
+Please feel free to open pull requests as to merge any contributions into this repository.
