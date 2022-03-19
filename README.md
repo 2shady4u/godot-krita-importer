@@ -90,4 +90,4 @@ The C++ library [libkra](https://github.com/2shady4u/libkra), used for importing
 
 In the case of Godot, this means that you'll have to choose the `sRGB IEC61966-2.1` color profile for all your Krita documents (Image -> Properties).
 
-Future improvements in the `libkra`-library might see the implementation of color profile awareness and conversion, most likely by using the [Little CMS](https://www.littlecms.com/) library as an additional external depedency in the project.
+Future improvements in the `libkra`-library might see the implementation of color profile awareness and conversion, most likely by using the [Little CMS](https://www.littlecms.com/) library as an additional external dependency in the project.

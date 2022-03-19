@@ -77,6 +77,7 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
 
     layer_data["type"] = exported_layer->type;
 
+    unsigned int pixel_size = exported_layer->pixel_size;
     switch (exported_layer->type)
     {
     case kra::PAINT_LAYER:
@@ -86,19 +87,34 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
         case kra::RGBA:
             layer_data["format"] = Image::FORMAT_RGBA8;
             break;
-        case kra::CMYK:
-            // TODO: Godot doesn't support CMYKA, so we'll either have to do some conversion or return an error at some point
+        case kra::RGBAF32:
+            layer_data["format"] = Image::FORMAT_RGBAF;
+            break;
+        default:
+            /* Godot doesn't support any of the other color spaces so we'll just pretend that they are RGBA */
+            Godot::print("Error: Importing an image with the '" + String(kra::get_color_space_name(exported_layer->color_space).c_str()) + "' color space is not supported by Godot!");
             layer_data["format"] = Image::FORMAT_RGBA8;
+            /* Also force the pixel_size to 4 */
+            pixel_size = 4;
             break;
         }
 
-        int bytes = width * height * exported_layer->pixel_size;
+        int bytes = width * height * pixel_size;
         PoolByteArray arr = PoolByteArray();
         arr.resize(bytes);
-        PoolByteArray::Write write = arr.write();
-        memcpy(write.ptr(), exported_layer->data.data(), bytes);
 
-        layer_data["data"] = arr;
+        if (exported_layer->color_space == kra::RGBA || exported_layer-> color_space == kra::RGBAF32)
+        {
+            PoolByteArray::Write write = arr.write();
+            memcpy(write.ptr(), exported_layer->data.data(), bytes);
+            layer_data["data"] = arr;
+        }
+        else
+        {
+            /* This is mainly here to stop Godot from crashing whenever someone tries to import a non-supported color space*/
+            // NOTE: I'm not really what this data will be populated with? Random junk?
+            layer_data["data"] = arr;
+        }
         break;
     }
     case kra::GROUP_LAYER:
