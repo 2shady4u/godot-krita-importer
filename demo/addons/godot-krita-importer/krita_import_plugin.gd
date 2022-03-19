@@ -86,7 +86,7 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 	node.queue_free()
 	return error
 
-func import_group_layer(importer : KraImporter, layer_data : Dictionary, options: Dictionary) -> Node2D:
+static func import_group_layer(importer : KraImporter, layer_data : Dictionary, options: Dictionary) -> Node2D:
 	var node = Node2D.new()
 	node.name = layer_data.get("name", node.name)
 	node.position = layer_data.get("position", Vector2.ZERO)
@@ -115,7 +115,7 @@ func import_group_layer(importer : KraImporter, layer_data : Dictionary, options
 
 	return node
 
-func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
+static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
 	var sprite = Sprite.new()
 	sprite.name = layer_data.get("name", sprite.name)
 	sprite.position = layer_data.get("position", Vector2.ZERO)
@@ -127,7 +127,6 @@ func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
 	sprite.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
 	var image = Image.new()
-	#print(layer_data)
 	#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
 	image.create_from_data(layer_data.width, layer_data.height, false, layer_data.format, layer_data.data)
 
@@ -144,13 +143,13 @@ func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
 
 	return sprite
 
-func enable_bit(mask, flag):
+static func enable_bit(mask, flag):
 	return mask | flag
 
-func disable_bit(mask, flag):
+static func disable_bit(mask, flag):
 	return mask & ~flag
 
-func set_owner_recursively(owner : Node2D, node : Node2D):
+static func set_owner_recursively(owner : Node2D, node : Node2D):
 	for child in node.get_children():
 		child.owner = owner
 
