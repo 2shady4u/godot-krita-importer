@@ -115,6 +115,10 @@ Supported formats can be listed as follows:
 
 In cases where your favorite color format `XYZ` is natively supported by Godot, but is unfortunately blatently absent from the above color space support matrix, please feel free to open an issue in this repository.
 
+### 3. Is support for `*.xcf`, `*.ora`, `*.psd`, etc... in the list of planned features?
+
+No other file formats will ever be supported.
+
 # <a name="how-to-contribute">How to contribute?</a>
 
 Build instructions for all supported platforms can be found [here](docs/BUILD_INSTRUCTIONS.md).
