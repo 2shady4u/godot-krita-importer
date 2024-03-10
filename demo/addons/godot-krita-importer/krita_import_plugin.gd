@@ -4,7 +4,7 @@
 # See LICENSE in the project root for license information.
 # ############################################################################ #
 
-tool
+@tool
 extends EditorImportPlugin
 
 enum VerbosityLevel {
@@ -14,47 +14,52 @@ enum VerbosityLevel {
 	VERY_VERBOSE
 }
 
-const presets := [
-	{"name": "ignore_invisible_layers", "default_value": false},
-	{"name": "flags/filter", "default_value": true},
+var presets : Array[Dictionary] = [
+	{
+		"name": "ignore_invisible_layers", 
+		"default_value": false
+	},{
+		"name": "texture_filter", 
+		"default_value": CanvasItem.TEXTURE_FILTER_PARENT_NODE,
+		"property_hint": PROPERTY_HINT_ENUM,
+		"hint_string": ",".join(range(0, CanvasItem.TEXTURE_FILTER_MAX))
+	},
 ]
 
-const KraImporter = preload("res://addons/godot-krita-importer/bin/libkra_importer.gdns")
-
-func get_import_options(preset : int) -> Array:
+func _get_import_options(path : String, preset : int) -> Array[Dictionary]:
 	return presets
 
-func get_import_order() -> int:
+func _get_import_order() -> int:
 	return 100
 
-func get_importer_name() -> String:
+func _get_importer_name() -> String:
 	return "godot-krita-importer"
 
-func get_option_visibility(option : String, options : Dictionary) -> bool:
+func _get_option_visibility(path: String, option_name: StringName, options: Dictionary) -> bool:
 	return true
 
-func get_preset_count() -> int:
+func _get_preset_count() -> int:
 	return 1
 
-func get_preset_name(preset : int) -> String:
+func _get_preset_name(preset : int) -> String:
 	return "Default"
 
-func get_priority() -> float:
+func _get_priority() -> float:
 	return 1.0
 
-func get_recognized_extensions() -> Array:
+func _get_recognized_extensions() -> PackedStringArray:
 	return ["kra", "krz"]
 
-func get_resource_type() -> String:
+func _get_resource_type() -> String:
 	return "PackedScene"
 
-func get_save_extension() -> String:
+func _get_save_extension() -> String:
 	return "scn"
 
-func get_visible_name() -> String:
+func _get_visible_name() -> String:
 	return "Scene from Krita"
 
-func import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
+func _import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
 	var importer = KraImporter.new()
 	importer.verbosity_level = VerbosityLevel.QUIET
 
@@ -69,7 +74,7 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 
 		match(layer_data.get("type", -1)):
 			0:
-				var sprite : Sprite = import_paint_layer(layer_data, options)
+				var sprite : Sprite2D = import_paint_layer(layer_data, options)
 				if sprite != null:
 					node.add_child(sprite)
 			1:
@@ -81,7 +86,7 @@ func import(source_file: String, save_path: String, options: Dictionary, platfor
 	set_owner_recursively(node, node)
 
 	scene.pack(node)
-	var error := ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], scene)
+	var error := ResourceSaver.save(scene, "%s.%s" % [save_path, _get_save_extension()])
 	# The node needs to be freed to avoid memory leakage
 	node.queue_free()
 	return error
@@ -96,14 +101,14 @@ static func import_group_layer(importer : KraImporter, layer_data : Dictionary, 
 		return null
 	node.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
-	var child_uuids : PoolStringArray = layer_data.get("child_uuids", PoolStringArray())
+	var child_uuids : PackedStringArray = layer_data.get("child_uuids", PackedStringArray())
 	# Needs to be in reverse order as to preserve layer ordering!
 	for i in range(child_uuids.size() - 1, -1, -1):
 		var uuid : String = child_uuids[i]
 		var child_data : Dictionary = importer.get_layer_data_with_uuid(uuid)
 		match(child_data.get("type", -1)):
 			0:
-				var sprite : Sprite = import_paint_layer(child_data, options)
+				var sprite : Sprite2D = import_paint_layer(child_data, options)
 				if sprite != null:
 					sprite.position -= node.position
 					node.add_child(sprite)
@@ -116,7 +121,7 @@ static func import_group_layer(importer : KraImporter, layer_data : Dictionary, 
 	return node
 
 static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
-	var sprite = Sprite.new()
+	var sprite = Sprite2D.new()
 	sprite.name = layer_data.get("name", sprite.name)
 	sprite.position = layer_data.get("position", Vector2.ZERO)
 	sprite.centered = false
@@ -126,19 +131,11 @@ static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> 
 		return null
 	sprite.modulate.a = layer_data.get("opacity", 255.0)/255.0
 
-	var image = Image.new()
 	#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
-	image.create_from_data(layer_data.width, layer_data.height, false, layer_data.format, layer_data.data)
+	var image = Image.create_from_data(layer_data.width, layer_data.height, false, layer_data.format, layer_data.data)
+	var texture = ImageTexture.create_from_image(image)
 
-	var texture = ImageTexture.new()
-	texture.create_from_image(image)
-
-	# Disable/enable the filter option which is positioned at the second bit position
-	if options.get("flags/filter", true):
-		texture.flags = enable_bit(texture.flags, Texture.FLAG_FILTER)
-	else:
-		texture.flags = disable_bit(texture.flags, Texture.FLAG_FILTER)
-
+	sprite.texture_filter = options.get("texture_filter", CanvasItem.TEXTURE_FILTER_PARENT_NODE)
 	sprite.texture = texture
 
 	return sprite

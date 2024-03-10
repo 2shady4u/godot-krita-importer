@@ -1,9 +1,10 @@
 #ifndef KRA_IMPORTER_H
 #define KRA_IMPORTER_H
 
-#include <Godot.hpp>
-#include <ProjectSettings.hpp>
-#include <Image.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+
+#include <godot_cpp/classes/project_settings.hpp>
+#include <godot_cpp/classes/image.hpp>
 
 #include <codecvt>
 #include <locale>
@@ -13,24 +14,21 @@
 
 namespace godot
 {
-    class KraImporter : public Reference
+    class KraImporter : public RefCounted
     {
-        GODOT_CLASS(KraImporter, Reference)
+        GDCLASS(KraImporter, RefCounted)
 
     private:
         std::unique_ptr<kra::Document> document;
 
         Dictionary _get_layer_data(const std::unique_ptr<kra::ExportedLayer> &exported_layer);
 
+    protected:
+        static void _bind_methods();
+
     public:
-        int layer_count;
-
-        static void _register_methods();
-
         KraImporter();
         ~KraImporter();
-
-        void _init();
 
         void load(String p_path);
 

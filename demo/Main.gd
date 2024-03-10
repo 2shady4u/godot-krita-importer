@@ -1,14 +1,12 @@
 extends Node2D
 
-const KraImporter = preload("res://addons/godot-krita-importer/bin/libkra_importer.gdns")
-
 func _ready():
 	var importer := KraImporter.new()
 	importer.load("res://addons/godot-krita-importer/examples/example.kra")
 
 	var options := {
 		"ignore_invisible_layers": false,
-		"flags/filter": false
+		"texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST
 	}
 
 	# We can't instance this class, but we can still access the static methods!
@@ -19,7 +17,7 @@ func _ready():
 
 		match(layer_data.get("type", -1)):
 			0:
-				var sprite : Sprite = import_plugin.import_paint_layer(layer_data, options)
+				var sprite : Sprite2D = import_plugin.import_paint_layer(layer_data, options)
 				if sprite != null:
 					add_child(sprite)
 			1:
