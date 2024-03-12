@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, feature/update-to-gdextension ]
     tags:
       - "v*"
 
@@ -10,42 +10,48 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-krita-importer/bin/
   TARGET_NAME: libkra_importer
-  TARGET: release
+  VAR_PATH: .github/workflows/build_var.json
+  SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
 
 jobs:
+  matrix:
+    name: Generate build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-json: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        shell: pwsh
+        # Use a small PowerShell script to generate the build matrix
+        run: "& .github/workflows/create-build-matrix.ps1"
+
   build:
-    name: ${{ matrix.name }}
+    needs: [ matrix ]
+    name: ${{ matrix.name }} - ${{ matrix.target == 'template_debug' && 'Debug' || 'Release' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Windows Compilation
-            os: "windows-latest"
-            artifact-name: windows
-            artifact-extension: dll
-            additional-python-packages: pywin32
-
-          - name: Ubuntu Compilation
-            os: "ubuntu-20.04"
-            artifact-name: linux
-            artifact-extension: so
-
-          - name: MacOS Compilation
-            os: "macos-11"
-            artifact-name: osx
-            artifact-extension: dylib
+      matrix: 
+        include: ${{ fromJson(needs.matrix.outputs.matrix-json) }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           lfs: true
           submodules: recursive
 
+      - name: Setup Godot build cache
+        uses: ./godot-cpp/.github/actions/godot-cache
+        with:
+          cache-name: ${{ matrix.cache-name }}-${{ matrix.target }}
+        continue-on-error: true
+
       # Use python 3.x release (works cross platform; best to keep self contained in it's own step)
       - name: Set up Python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.x'
@@ -60,7 +66,6 @@ jobs:
           python --version
           scons --version
 
-      # The prebuilt pnglib configuration has to be copied to the base folder!
       - name: Windows Compilation
         if: runner.os == 'Windows'
         run: |
@@ -69,66 +74,58 @@ jobs:
             mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
           }
           cd ${{ env.PROJECT_FOLDER }}
-          cd godot-cpp
-          scons platform=windows bits=64 target=${{ env.TARGET }} generate_bindings=yes -j4
-          cd ..
-          scons platform=windows target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }}
+          scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
-      # The prebuilt pnglib configuration has to be copied to the base folder!
       - name: Linux or MacOS Compilation
         if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}
-          cd godot-cpp
-          scons platform=${{ matrix.artifact-name }} bits=64 target=${{ env.TARGET }} generate_bindings=yes -j4
-          cd ..
-          scons platform=${{ matrix.artifact-name }} target=${{ env.TARGET }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }}
+          scons platform=${{ matrix.platform }} target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
 
       - name: Upload Artifact
         env:
-          ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/${{ matrix.artifact-name }}
+          ARTIFACT_FOLDER: ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.artifact-name }}
-          path: ${{ env.ARTIFACT_FOLDER }}/*.${{ matrix.artifact-extension }}
+          name: ${{ matrix.platform }}
+          path: ${{ env.ARTIFACT_FOLDER }}*.${{ matrix.artifact-extension }}
+          if-no-files-found: error
 
   release:
     name: Release
     runs-on: "ubuntu-20.04"
-    needs: [build]
+    needs: [ build ]
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
           lfs: true
+          submodules: recursive
 
       - name: Download Artifacts
+        id: download
         uses: actions/download-artifact@v3
         with:
-          path: demo/addons/godot-krita-importer/bin
+          path: artifacts
 
-      - name: Compress Release Assets
+      - name: Copy Artifacts to bin/-folder
         run: |
+          mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
+          cd ${{ env.PROJECT_FOLDER }}
+          cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
           zip -r demo.zip demo/
-          cd demo/
-          zip -r addons.zip addons/
-      
-      - name: Create Release & Upload Assets
+          cd ${{ env.TARGET_PATH }}/..
+          zip -r bin.zip bin/
+
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change
-          draft: false
-          prerelease: false
-          token: ${{ secrets.PAT }} # Use a personal access token such that the asetlib_sync.yml is triggered by this release!
+          body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
           files: |
-            demo.zip
-            demo/addons.zip
+            ${{ env.PROJECT_FOLDER }}/demo.zip
+            ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
+          draft: true
+          prerelease: true
