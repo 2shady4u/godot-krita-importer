@@ -17,6 +17,12 @@ void KraImporter::_bind_methods()
     ClassDB::bind_method(D_METHOD("set_verbosity_level"), &KraImporter::set_verbosity_level);
 	ClassDB::bind_method(D_METHOD("get_verbosity_level"), &KraImporter::get_verbosity_level);
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "verbosity_level"), "set_verbosity_level", "get_verbosity_level");
+
+    // Constants.
+	BIND_ENUM_CONSTANT(QUIET);
+	BIND_ENUM_CONSTANT(NORMAL);
+	BIND_ENUM_CONSTANT(VERBOSE);
+	BIND_ENUM_CONSTANT(VERY_VERBOSE);
 }
 
 KraImporter::KraImporter()

@@ -7,13 +7,6 @@
 @tool
 extends EditorImportPlugin
 
-enum VerbosityLevel {
-	QUIET,
-	NORMAL,
-	VERBOSE,
-	VERY_VERBOSE
-}
-
 var presets : Array[Dictionary] = [
 	{
 		"name": "ignore_invisible_layers", 
@@ -61,7 +54,7 @@ func _get_visible_name() -> String:
 
 func _import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
 	var importer = KraImporter.new()
-	importer.verbosity_level = VerbosityLevel.QUIET
+	importer.verbosity_level = KraImporter.VerbosityLevel.QUIET
 
 	var scene := PackedScene.new()
 	var node := Node2D.new()
