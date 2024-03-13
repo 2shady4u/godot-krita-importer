@@ -2,27 +2,36 @@
 
 using namespace godot;
 
-void KraImporter::_register_methods()
+void KraImporter::_bind_methods()
 {
-    register_method("load", &KraImporter::load);
-    register_method("get_layer_data_at", &KraImporter::get_layer_data_at);
-    register_method("get_layer_data_with_uuid", &KraImporter::get_layer_data_with_uuid);
+    // Methods.
+    ClassDB::bind_method(D_METHOD("load", "path"), &KraImporter::load);
+    ClassDB::bind_method(D_METHOD("get_layer_data_at", "layer_index"), &KraImporter::get_layer_data_at);
+    ClassDB::bind_method(D_METHOD("get_layer_data_with_uuid", "UUID"), &KraImporter::get_layer_data_with_uuid);
 
-    register_property<KraImporter, int>("layer_count", &KraImporter::set_layer_count, &KraImporter::get_layer_count, 0);
-    register_property<KraImporter, int>("verbosity_level", &KraImporter::set_verbosity_level, &KraImporter::get_verbosity_level, 0);
+    // Properties.
+    ClassDB::bind_method(D_METHOD("set_layer_count"), &KraImporter::set_layer_count);
+	ClassDB::bind_method(D_METHOD("get_layer_count"), &KraImporter::get_layer_count);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "layer_count"), "set_layer_count", "get_layer_count");
+
+    ClassDB::bind_method(D_METHOD("set_verbosity_level"), &KraImporter::set_verbosity_level);
+	ClassDB::bind_method(D_METHOD("get_verbosity_level"), &KraImporter::get_verbosity_level);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "verbosity_level"), "set_verbosity_level", "get_verbosity_level");
+
+    // Constants.
+	BIND_ENUM_CONSTANT(QUIET);
+	BIND_ENUM_CONSTANT(NORMAL);
+	BIND_ENUM_CONSTANT(VERBOSE);
+	BIND_ENUM_CONSTANT(VERY_VERBOSE);
 }
 
 KraImporter::KraImporter()
 {
+    document = std::make_unique<kra::Document>();
 }
 
 KraImporter::~KraImporter()
 {
-}
-
-void KraImporter::_init()
-{
-    document = std::make_unique<kra::Document>();
 }
 
 void KraImporter::load(String p_path)
@@ -31,7 +40,8 @@ void KraImporter::load(String p_path)
     p_path = ProjectSettings::get_singleton()->globalize_path(p_path.strip_edges());
 
     /* Convert wstring to string */
-    const char *char_path = p_path.alloc_c_string();
+    const CharString dummy_path = p_path.utf8();
+    const char *char_path = dummy_path.get_data();
     std::wstring ws = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(char_path);
     document->load(ws);
 }
@@ -47,7 +57,7 @@ Dictionary KraImporter::get_layer_data_at(int p_layer_index)
     }
     else
     {
-        Godot::print("Error: Index " + String(p_layer_index) + " is out of range, should be between 0 and " + String(document->layers.size()));
+        UtilityFunctions::printerr("Error: Index " + String(std::to_string(p_layer_index).c_str()) + " is out of range, should be between 0 and " + String(std::to_string(document->layers.size()).c_str()));
         return Dictionary();
     }
 }
@@ -55,7 +65,9 @@ Dictionary KraImporter::get_layer_data_at(int p_layer_index)
 Dictionary KraImporter::get_layer_data_with_uuid(String p_uuid)
 {
     std::unique_ptr<kra::ExportedLayer> exported_layer = std::make_unique<kra::ExportedLayer>();
-    exported_layer = document->get_exported_layer_with_uuid(p_uuid.alloc_c_string());
+    const CharString dummy_uuid = p_uuid.utf8();
+    const char *char_uuid = dummy_uuid.get_data();
+    exported_layer = document->get_exported_layer_with_uuid(char_uuid);
 
     return _get_layer_data(exported_layer);
 }
@@ -92,7 +104,7 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
             break;
         default:
             /* Godot doesn't support any of the other color spaces so we'll just pretend that they are RGBA */
-            Godot::print("Error: Importing an image with the '" + String(kra::get_color_space_name(exported_layer->color_space).c_str()) + "' color space is not supported by Godot!");
+            UtilityFunctions::printerr("Error: Importing an image with the '" + String(kra::get_color_space_name(exported_layer->color_space).c_str()) + "' color space is not supported by Godot!");
             layer_data["format"] = Image::FORMAT_RGBA8;
             /* Also force the pixel_size to 4 */
             pixel_size = 4;
@@ -100,13 +112,12 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
         }
 
         int bytes = width * height * pixel_size;
-        PoolByteArray arr = PoolByteArray();
+        PackedByteArray arr = PackedByteArray();
         arr.resize(bytes);
 
         if (exported_layer->color_space == kra::RGBA || exported_layer-> color_space == kra::RGBAF32)
         {
-            PoolByteArray::Write write = arr.write();
-            memcpy(write.ptr(), exported_layer->data.data(), bytes);
+            memcpy((void *)arr.ptrw(), exported_layer->data.data(), bytes);
             layer_data["data"] = arr;
         }
         else
@@ -120,7 +131,7 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
     case kra::GROUP_LAYER:
     {
         int bytes = exported_layer->child_uuids.size();
-        PoolStringArray arr = PoolStringArray();
+        PackedStringArray arr = PackedStringArray();
         for (const auto &uuid : exported_layer->child_uuids)
         {
             arr.push_back(uuid.c_str());

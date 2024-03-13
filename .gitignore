@@ -1,6 +1,9 @@
 
 # Godot-specific ignores
+*.gen.*
 .import/
+.godot/
+/gen/
 
 # Imported translations (automatically generated from CSV files)
 *.translation
@@ -20,8 +23,6 @@ mono_crash.*.json
 *.sql
 *.sqlite
 *.db
-# Do not ignore the database that is to be opened in read-only mode!
-!data_to_be_packaged.db
 
 # Compiled source #
 ###################
@@ -49,8 +50,6 @@ Thumbs.db
 # Etc
 .sconsign.dblite
 demo/build
-test_backup_new.json
-test_backup_base64_new.json
 
 # VS
 vsproj/.vs/

@@ -1,9 +1,10 @@
 #ifndef KRA_IMPORTER_H
 #define KRA_IMPORTER_H
 
-#include <Godot.hpp>
-#include <ProjectSettings.hpp>
-#include <Image.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+
+#include <godot_cpp/classes/project_settings.hpp>
+#include <godot_cpp/classes/image.hpp>
 
 #include <codecvt>
 #include <locale>
@@ -13,30 +14,37 @@
 
 namespace godot
 {
-    class KraImporter : public Reference
+    class KraImporter : public RefCounted
     {
-        GODOT_CLASS(KraImporter, Reference)
+        GDCLASS(KraImporter, RefCounted)
 
     private:
         std::unique_ptr<kra::Document> document;
 
         Dictionary _get_layer_data(const std::unique_ptr<kra::ExportedLayer> &exported_layer);
 
-    public:
-        int layer_count;
+    protected:
+        static void _bind_methods();
 
-        static void _register_methods();
+    public:
+    	// Constants.
+        enum VerbosityLevel {
+            QUIET = 0,
+            NORMAL = 1,
+            VERBOSE = 2,
+            VERY_VERBOSE = 3
+        };
 
         KraImporter();
         ~KraImporter();
 
-        void _init();
-
+        // Functions.
         void load(String p_path);
 
         Dictionary get_layer_data_at(int p_layer_index);
         Dictionary get_layer_data_with_uuid(String p_uuid);
 
+        // Properties.
         void set_layer_count(int p_layer_count);
         int get_layer_count();
 
@@ -44,6 +52,8 @@ namespace godot
         int get_verbosity_level();
     };
 
-}
+} //namespace godot
+
+VARIANT_ENUM_CAST(KraImporter::VerbosityLevel);
 
 #endif // KRA_IMPORTER_H

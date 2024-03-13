@@ -1,15 +1,15 @@
 # ############################################################################ #
-# Copyright © 2022 Piet Bronders <piet.bronders@gmail.com>
+# Copyright © 2022-2024 Piet Bronders <piet.bronders@gmail.com>
 # Licensed under the MIT License.
 # See LICENSE in the project root for license information.
 # ############################################################################ #
 
-tool
+@tool
 extends EditorPlugin
 
 var import_plugin = null
 
-func get_name() -> String:
+func get_name() -> StringName:
 	return "Godot Krita Importer"
 
 func _enter_tree():
