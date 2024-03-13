@@ -124,8 +124,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
+          draft: true
+          prerelease: true
+          token: ${{ secrets.PAT }} # Use a personal access token such that the asetlib_sync.yml is triggered by this release!
           files: |
             ${{ env.PROJECT_FOLDER }}/demo.zip
             ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
-          draft: true
-          prerelease: true
