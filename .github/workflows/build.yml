@@ -1,7 +1,7 @@
 name: 🌈 All Builds
 on:
   push:
-    branches: [ master, main, feature/update-to-gdextension ]
+    branches: [ master, main ]
     tags:
       - "v*"
 

@@ -36,7 +36,7 @@ Re-building Godot from scratch is **NOT** required, the proper way of installing
 
 ### Manually
 
-It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-krita-importer/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `gdsqlite.gdns`-resource and that it is available in the `res://`-environment.
+It's also possible to manually download the build files found in the [releases](https://github.com/2shady4u/godot-krita-importer/releases) tab, extract them on your system and run the supplied demo-project. Make sure that Godot is correctly loading the `libkra_importer.gdextension`-resource and that it is available in the `res://`-environment.
 
 An example project, named "demo", can also be downloaded from the releases tab.
 
