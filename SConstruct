@@ -52,5 +52,14 @@ else:
         env["SHLIBSUFFIX"]
     )
 
+if env["platform"] == "macos":
+    # For compiling zlib on macOS, an additional compiler flag needs to be added!
+    # See: https://github.com/HaxeFoundation/hxcpp/issues/723
+    env.Append(CCFLAGS=['-DHAVE_UNISTD_H'])
+elif env["platform"] == "linux":
+    # To compile zlib on Linux without any warning, an additional compiler flag needs to be added here!
+    # This is similar to the exact same compiler flag added for macOS targets... except without the crash!
+    env.Append(CCFLAGS=['-DHAVE_UNISTD_H'])
+
 library = env.SharedLibrary(target=target, source=sources)
 Default(library)
