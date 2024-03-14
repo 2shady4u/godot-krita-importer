@@ -19,16 +19,17 @@ jobs:
       - name: Download Release Assets
         uses: dsaltares/fetch-gh-release-asset@master
         with:
-          file: "addons.zip"
-          target: "addons.zip"
+          file: "demo.zip"
+          target: "demo.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Decompress & Commit Release Assets
         run: |
-          unzip -o addons.zip
+          unzip -o demo.zip
+          cp -rf demo/addons/ .
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add -A :!addons.zip
+          git add -A addons/
           git commit -m "Update to latest Github Actions"
           git tag ${{ github.event.release.tag_name }}-assetlib
 
