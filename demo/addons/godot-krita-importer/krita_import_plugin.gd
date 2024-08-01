@@ -16,6 +16,9 @@ var presets : Array[Dictionary] = [
 		"default_value": CanvasItem.TEXTURE_FILTER_PARENT_NODE,
 		"property_hint": PROPERTY_HINT_ENUM,
 		"hint_string": ",".join(range(0, CanvasItem.TEXTURE_FILTER_MAX))
+	},{
+		"name": "crop_to_visible", 
+		"default_value": true
 	},
 ]
 
@@ -116,6 +119,7 @@ static func import_group_layer(importer : KraImporter, layer_data : Dictionary, 
 static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> Node2D:
 	var sprite = Sprite2D.new()
 	sprite.name = layer_data.get("name", sprite.name)
+	sprite.position = layer_data.get("position", Vector2.ZERO)
 	sprite.centered = false
 
 	sprite.visible = layer_data.get("visible", true)
@@ -125,11 +129,13 @@ static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> 
 
 	#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
 	var image = Image.create_from_data(layer_data.width, layer_data.height, false, layer_data.format, layer_data.data)
-	var visible_region = image.get_used_rect()
-	var cropped_image = image.get_region(visible_region);
-	var texture = ImageTexture.create_from_image(cropped_image)
+
+	if options.get("crop_to_visible", true):
+		var visible_region = image.get_used_rect()
+		image = image.get_region(visible_region)
+		sprite.position += Vector2(visible_region.position)
 	
-	sprite.position = layer_data.get("position", Vector2.ZERO) + Vector2(visible_region.position)
+	var texture = ImageTexture.create_from_image(image)
 
 	sprite.texture_filter = options.get("texture_filter", CanvasItem.TEXTURE_FILTER_PARENT_NODE)
 	sprite.texture = texture
