@@ -19,6 +19,9 @@ var presets : Array[Dictionary] = [
 	},{
 		"name": "crop_to_visible", 
 		"default_value": true
+	},{
+		"name": "center_sprites", 
+		"default_value": true
 	},
 ]
 
@@ -120,7 +123,6 @@ static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> 
 	var sprite = Sprite2D.new()
 	sprite.name = layer_data.get("name", sprite.name)
 	sprite.position = layer_data.get("position", Vector2.ZERO)
-	sprite.centered = false
 
 	sprite.visible = layer_data.get("visible", true)
 	if not sprite.visible and options.get("ignore_invisible_layers", false):
@@ -136,6 +138,12 @@ static func import_paint_layer(layer_data : Dictionary, options: Dictionary) -> 
 		sprite.position += Vector2(visible_region.position)
 	
 	var texture = ImageTexture.create_from_image(image)
+
+	if options.get("center_sprites", true):
+		sprite.position += Vector2(image.get_size())/2.0
+		sprite.centered = true
+	else:
+		sprite.centered = false
 
 	sprite.texture_filter = options.get("texture_filter", CanvasItem.TEXTURE_FILTER_PARENT_NODE)
 	sprite.texture = texture
