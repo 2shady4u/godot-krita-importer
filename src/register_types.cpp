@@ -15,7 +15,7 @@ void initialize_kra_importer_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
-	ClassDB::register_class<KraImporter>();
+	GDREGISTER_CLASS(KraImporter);
 }
 
 void uninitialize_kra_importer_module(ModuleInitializationLevel p_level) {
