@@ -14,7 +14,7 @@ Plugin for Godot Engine to automatically import Krita KRA & KRZ-files
 - [How to install?](#how-to-install)
 - [How to use?](#how-to-use)
   - [Variables](#variables)
-  - [Functions](#functions)
+  - [Methods](#methods)
 - [FAQ](#faq)
 - [How to contribute?](#how-to-contribute)
 
@@ -69,7 +69,7 @@ In cases where more advanced importing functionality is wanted or required, the 
     
     ***NOTE:** VERBOSE and higher levels might considerably slow down the importing process due to excessive logging.*
 
-## <a name="functions">Functions</a>
+## <a name="methods">Methods</a>
 
 - void **load(** String path **)**
 

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class name="KraImporter" inherits="RefCounted"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Class that allows natively importing Krita [code]*.kra[/code] &amp; [code]*.krz[/code]-archives straight into the Godot editor.
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+		<link title="Repository's README.md">https://github.com/2shady4u/godot-krita-importer/blob/main/README.md</link>
+	</tutorials>
+	<methods>
+		<method name="load">
+			<return type="void" />
+			<description>
+                Load a KRA or KRZ-archive file and populate the internal layer structure.
+			</description>
+		</method>
+		<method name="get_layer_data_at">
+			<return type="Dictionary" />
+			<description>
+                Return the layer_data of the layer at the given top-level index.
+			</description>
+		</method>
+		<method name="get_layer_data_with_uuid">
+			<return type="Dictionary" />
+			<description>
+                Return the layer_data of the layer with the given UUID.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="layer_count" type="int" default="0">
+            Number of loaded layers at the top level of the document's layer structure.
+		</member>
+		<member name="verbosity_level" type="int" default="1">
+    		The verbosity_level determines the amount and depth of logging to the Godot console.
+    		[i][b]NOTE:[/b] [constant VERBOSE] and higher levels might considerably slow down your queries due to excessive logging.[/i]
+		</member>
+	</members>
+	<signals>
+	</signals>
+	<constants>
+		<constant name="QUIET" value="0">
+			Don't print anything to the console.
+		</constant>
+		<constant name="NORMAL" value="1">
+			Print essential information to the console.
+		</constant>
+		<constant name="VERBOSE" value="2">
+			Print additional information to the console.
+		</constant>
+		<constant name="VERY_VERBOSE" value="3">
+			Same as [constant VERBOSE].
+		</constant>
+	</constants>
+</class>

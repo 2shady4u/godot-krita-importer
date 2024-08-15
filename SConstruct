@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import os
-import sys
 
 target_path = ARGUMENTS.pop("target_path", "demo/addons/godot-krita-importer/bin/")
 target_name = ARGUMENTS.pop("target_name", "libkra_importer")
@@ -51,6 +49,10 @@ else:
         env["suffix"],
         env["SHLIBSUFFIX"]
     )
+
+if env["target"] in ["editor", "template_debug"]:
+    doc_data = env.GodotCPPDocData("src/gen/doc_data.gen.cpp", source=Glob("doc_classes/*.xml"))
+    sources.append(doc_data)
 
 if env["platform"] == "macos":
     # For compiling zlib on macOS, an additional compiler flag needs to be added!
