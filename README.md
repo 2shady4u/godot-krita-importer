@@ -48,6 +48,16 @@ Krita                      |  Godot
 :-------------------------:|:-------------------------:
 ![Krita source file](readme/krita_source_file.png?raw=true "Krita source file") | ![Imported result in Godot](readme/godot_imported_scene.png?raw=true "Imported result in Godot")
 
+Following import options are available from the import tab:
+
+| name                    | default | description                                                                                  | 
+| ----------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| ignore_invisible_layers | false   | Do not import layers that are set to invisible in Krita.                                     |
+| texture_filter          | CanvasItem.TEXTURE_FILTER_PARENT_NODE | Texture filter that is used for all created Sprite2D nodes.    |
+| crop_to_visible         | true    | Crop all textures to the visible portion of their respective image.                          |
+| center_sprites          | true    | Set all textures to centered by setting the centered property in the created Sprite2D nodes. |
+| import_as_files         | false   | *(false)* Include the raw layer data directly into the created Sprite2D nodes.<br>*(true)* Save all textures to PNG files and reference those files in the created Sprite2D nodes. |
+
 In cases where more advanced importing functionality is wanted or required, the plugin exposes several variables and methods that hopefully allow enough freedom to easily extend the importer.
 
 ## <a name="variables">Variables</a>
