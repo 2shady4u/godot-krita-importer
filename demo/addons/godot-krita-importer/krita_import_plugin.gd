@@ -25,7 +25,7 @@ var presets : Array[Dictionary] = [
 	},{
 		"name": "import_as_files", 
 		"default_value": false
-	},
+	}
 ]
 
 func _get_import_options(path : String, preset : int) -> Array[Dictionary]:
@@ -61,29 +61,7 @@ func _get_save_extension() -> String:
 func _get_visible_name() -> String:
 	return "Scene from Krita"
 
-var new_gen_files = []
-
-func _clean_old_gen_files(dir_path):
-	var dir = DirAccess.open(dir_path)
-	
-	if dir != null:
-		dir.include_hidden = true
-		dir.include_navigational = false
-		
-		for file in dir.get_files():
-			var file_path = (dir_path + "/" + file).rstrip(".import")
-			if not file_path in new_gen_files:
-				dir.remove(file)
-		for sub_dir in dir.get_directories():
-			_clean_old_gen_files(dir_path + "/" + sub_dir)
-		DirAccess.remove_absolute(dir_path)
-
 func _import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array, gen_files: Array) -> int:
-	
-	var current_path = source_file.get_basename() + "_kra_imported_files"
-	
-	new_gen_files.clear()
-	
 	var importer = KraImporter.new()
 	importer.verbosity_level = KraImporter.VerbosityLevel.QUIET
 
@@ -93,16 +71,17 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 
 	importer.load(source_file)
 
+	var textures_dir: String =  source_file.get_basename() + "_kra_imported_files"
 	for i in range(importer.layer_count - 1, -1, -1):
 		var layer_data : Dictionary = importer.get_layer_data_at(i)
 
 		match(layer_data.get("type", -1)):
 			0:
-				var sprite : Sprite2D = import_paint_layer(layer_data, options, current_path)
+				var sprite : Sprite2D = import_paint_layer(layer_data, options, textures_dir)
 				if sprite != null:
 					node.add_child(sprite)
 			1:
-				var child_node : Node2D = import_group_layer(importer, layer_data, options, current_path)
+				var child_node : Node2D = import_group_layer(importer, layer_data, options, textures_dir)
 				if child_node != null:
 					node.add_child(child_node)
 
@@ -111,23 +90,52 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 	set_owner_recursively(node, node)
 
 	scene.pack(node)
-	var error := ResourceSaver.save(scene, "%s.%s" % [save_path, _get_save_extension()])
+	var import_path := "%s.%s" % [save_path, _get_save_extension()]
+	var error := ResourceSaver.save(scene, import_path)
 	# The node needs to be freed to avoid memory leakage
 	node.queue_free()
 	
-	_clean_old_gen_files(current_path)
-	gen_files.append_array(new_gen_files)
-	
-	EditorInterface.get_resource_filesystem().scan()
-	EditorInterface.get_resource_filesystem().scan_sources()
-	
+	var allowed_files := []
+	for dep in ResourceLoader.get_dependencies(import_path):
+		allowed_files.append(dep.get_slice("::", 2))
+
+	# Purge all the obsolete '*.png'-files in the folder!
+	purge_obsolete_textures_recursively(textures_dir, allowed_files)
+
+	EditorInterface.get_base_control().get_tree().process_frame.connect(
+		self._reimport_deferred.bind(gen_files)
+	)
+
 	return error
 
-func import_group_layer(importer : KraImporter, layer_data : Dictionary, options: Dictionary, current_path: String) -> Node2D:
+func _reimport_deferred(files: PackedStringArray):
+	EditorInterface.get_base_control().get_tree().process_frame.disconnect(self._reimport_deferred)
+	EditorInterface.get_resource_filesystem().scan()
+	EditorInterface.get_resource_filesystem().scan_sources()
+
+static func purge_obsolete_textures_recursively(save_dir: String, allowed_files: Array):
+	if not DirAccess.dir_exists_absolute(save_dir):
+		return
+
+	for file in DirAccess.get_files_at(save_dir):
+		if not ["png"].has(file.get_extension()):
+			continue
+
+		var file_path := save_dir.path_join(file)
+		if allowed_files.has(file_path) :
+			continue
+
+		print("Removing " + file_path)
+		DirAccess.remove_absolute(file_path)
+		DirAccess.remove_absolute(file_path + ".import")
+	for subdir in DirAccess.get_directories_at(save_dir):
+		purge_obsolete_textures_recursively(save_dir.path_join(subdir), allowed_files)
+
+	DirAccess.remove_absolute(save_dir + "/")
+
+static func import_group_layer(importer: KraImporter, layer_data: Dictionary, options: Dictionary, textures_dir: String) -> Node2D:
 	var node = Node2D.new()
 	node.name = layer_data.get("name", node.name)
-	current_path += "/" + node.name
-	
 	node.position = layer_data.get("position", Vector2.ZERO)
 
 	node.visible = layer_data.get("visible", true)
@@ -142,23 +150,21 @@ func import_group_layer(importer : KraImporter, layer_data : Dictionary, options
 		var child_data : Dictionary = importer.get_layer_data_with_uuid(uuid)
 		match(child_data.get("type", -1)):
 			0:
-				var sprite : Sprite2D = import_paint_layer(child_data, options, current_path)
+				var sprite : Sprite2D = import_paint_layer(child_data, options, textures_dir.path_join(node.name))
 				if sprite != null:
 					sprite.position -= node.position
 					node.add_child(sprite)
 			1:
-				var child_node : Node2D = import_group_layer(importer, child_data, options, current_path)
+				var child_node : Node2D = import_group_layer(importer, child_data, options, textures_dir.path_join(node.name))
 				if child_node != null:
 					child_node.position -= node.position
 					node.add_child(child_node)
 
 	return node
 
-func import_paint_layer(layer_data : Dictionary, options: Dictionary, current_path: String) -> Node2D:
+static func import_paint_layer(layer_data: Dictionary, options: Dictionary, textures_dir: String) -> Node2D:
 	var sprite = Sprite2D.new()
 	sprite.name = layer_data.get("name", sprite.name)
-	current_path += "/" + sprite.name
-	
 	sprite.position = layer_data.get("position", Vector2.ZERO)
 
 	sprite.visible = layer_data.get("visible", true)
@@ -173,28 +179,6 @@ func import_paint_layer(layer_data : Dictionary, options: Dictionary, current_pa
 		var visible_region = image.get_used_rect()
 		image = image.get_region(visible_region)
 		sprite.position += Vector2(visible_region.position)
-	
-	var texture
-	
-	if options.get("import_as_files", false):
-		
-		DirAccess.make_dir_recursive_absolute(current_path.get_base_dir())
-		
-		var image_path = current_path + ".png"
-		
-		image.save_png(image_path)
-		
-		EditorInterface.get_resource_filesystem().update_file(image_path)
-		
-		var error = append_import_external_resource(image_path)
-		if error != OK:
-			push_error(error)
-		else:
-			texture = load(image_path)
-			
-		new_gen_files.append(image_path)
-	else:
-		texture = ImageTexture.create_from_image(image)
 
 	if options.get("center_sprites", true):
 		sprite.position += Vector2(image.get_size())/2.0
@@ -203,7 +187,17 @@ func import_paint_layer(layer_data : Dictionary, options: Dictionary, current_pa
 		sprite.centered = false
 
 	sprite.texture_filter = options.get("texture_filter", CanvasItem.TEXTURE_FILTER_PARENT_NODE)
-	sprite.texture = texture
+	if options.get("import_as_files", false):
+		# Make sure the path exists
+		DirAccess.make_dir_recursive_absolute(textures_dir)
+		var save_path: String = textures_dir.path_join("{name}.png".format({"name": sprite.name}))
+		image.save_png(save_path)
+		var texture = CompressedTexture2D.new()
+		texture.take_over_path(save_path)
+		sprite.texture = texture
+	else:
+		var texture = ImageTexture.create_from_image(image)
+		sprite.texture = texture
 
 	return sprite
 
