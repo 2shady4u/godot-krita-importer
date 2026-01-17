@@ -1,5 +1,5 @@
 # ############################################################################ #
-# Copyright © 2022-2024 Piet Bronders <piet.bronders@gmail.com>
+# Copyright © 2022-2026 Piet Bronders <piet.bronders@gmail.com>
 # Licensed under the MIT License.
 # See LICENSE in the project root for license information.
 # ############################################################################ #

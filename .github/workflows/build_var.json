@@ -22,8 +22,8 @@
             "cache-name": "win-x86_64-mingw"
         },
         {
-            "name": "Ubuntu (GCC)",
-            "os": "ubuntu-20.04",
+            "name": "Ubuntu (x86_64, GCC)",
+            "os": "ubuntu-22.04",
             "platform": "linux",
             "artifact-extension": "so",
             "cache-name": "linux-x86_64"
