@@ -6,11 +6,11 @@ on:
 jobs:
   assetlib:
     name: Update "assetlib"-Branch
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
         with:
           ref: assetlib
           submodules: recursive
