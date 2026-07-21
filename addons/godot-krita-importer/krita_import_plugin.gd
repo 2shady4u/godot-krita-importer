@@ -1,5 +1,5 @@
 # ############################################################################ #
-# Copyright © 2022-2024 Piet Bronders <piet.bronders@gmail.com>
+# Copyright © 2022-2026 Piet Bronders <piet.bronders@gmail.com>
 # Licensed under the MIT License.
 # See LICENSE in the project root for license information.
 # ############################################################################ #
@@ -85,7 +85,6 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 				if child_node != null:
 					node.add_child(child_node)
 
-	
 	# All the children need to have the node as its owner!
 	set_owner_recursively(node, node)
 
@@ -94,7 +93,7 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 	var error := ResourceSaver.save(scene, import_path)
 	# The node needs to be freed to avoid memory leakage
 	node.queue_free()
-	
+
 	var allowed_files := []
 	for dep in ResourceLoader.get_dependencies(import_path):
 		allowed_files.append(dep.get_slice("::", 2))
