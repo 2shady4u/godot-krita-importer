@@ -122,9 +122,10 @@ jobs:
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}
           cp -r ${{steps.download.outputs.download-path}}/**/* ${{ env.TARGET_PATH }}
+          cp LICENSE.md ${{ env.TARGET_PATH }}/..
           zip -r demo.zip demo/
-          cd ${{ env.TARGET_PATH }}/..
-          zip -r bin.zip bin/
+          cd demo/
+          zip -r addons.zip addons/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -132,6 +133,6 @@ jobs:
           body_path: ${{ env.PROJECT_FOLDER }}/.github/workflows/release_template.md
           files: |
             ${{ env.PROJECT_FOLDER }}/demo.zip
-            ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}/../bin.zip
+            ${{ env.PROJECT_FOLDER }}/demo/addons.zip
           draft: true
           prerelease: true
