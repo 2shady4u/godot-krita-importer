@@ -22,11 +22,11 @@ Plugin for Godot Engine to automatically import Krita KRA & KRZ-files
 
 Re-building Godot from scratch is **NOT** required, the proper way of installing this plugin is to either install it through the Asset Library or to just manually download the build files yourself.
 
-### Godot Asset Library
+### Godot Asset Store
 
-**Godot Krita Importer** is available through the official Godot Asset Library, and can be installed in the following way:
+**Godot Krita Importer** is available through the official Godot Asset Store, and can be installed in the following way:
 
-- Click on the 'AssetLib' button at the top of the editor.
+- Click on the 'Asset Store' button at the top of the editor.
 - Search for 'Godot Krita Importer' and click on the resulting element.
 - In the dialog pop-up, click 'Download'.
 - Once the download is complete, click on the install button...
