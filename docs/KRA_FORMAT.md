@@ -39,11 +39,15 @@ Only a small selection of these files are actually useful for purposes of this p
 
     contains information about the document's layout and its layers' properties
 
+**`layer2.defaultpixel`, `layer3.defaultpixel`, ...**
+
+    contains the value of the default background pixel for the corresponding layer
+
 **`layer2`, `layer3`, ...**
 
     contains the actual layer content in binary format
 
-Both file types are now to be discussed in further detail.
+These file types are now to be discussed in further detail.
 
 ## `maindoc.xml`
 
@@ -132,6 +136,17 @@ While most attributes are self-explanatory, there's a select few that benefit fr
 
 ***NOTE:** The layer's local position in the document (or its parent group layer) is found by adding the x (or y) attribute to the position of the left-most (or top-most) data tile (see next section).*
 
+## `layer2.defaultpixel`, `layer3.defaultpixel`, ...
+
+These are binary files in which the value for the default background pixel is stored.  
+This file solely contains the raw binary content of the pixel and nothing else.
+
+For example a layer with a RED default background `RGBA` pixel would contain the following content:
+
+```
+FF 00 00 FF
+```
+
 ## `layer2`, `layer3`, ...
 
 These are binary files in which the layer's color data is saved in a tile-based manner. The exact relationship between these tiles and the layer's data content can be easily demonstrated by using a simple example. 
@@ -213,13 +228,13 @@ LEFT, TOP, LZF, COMPRESSEDSIZE
 
 in which `LEFT` and `TOP` are the tile's horizontal and vertical positions respectively, `LZF` is the compression algorithm used for this tile (it's always `LZF`) and `COMPRESSEDSIZE` is the number of bytes following this header statement.
 
-The byte following this tile's header gives an indication of this tile's compression status, with 0 and 1 being uncompressed and compressed respectively. Currently, this byte will always be 1 as the option to save your Krita document in uncompressed format is not yet implemented. (And there's no indication that it will ever be!)
+The first byte following this tile's header gives the value of this tile's data flag, with 0 and 1 denoting uncompressed and compressed data respectively.
 
-After this, there will be `COMPRESSEDSIZE - 1` bytes which will need to be uncompressed, using the `LZF` decompression algorithm as found [here](https://invent.kde.org/kde/krita/-/blob/master/libs/image/tiles3/swap/kis_lzf_compression.cpp), as to obtain the actual tile data.
+After this, there will be `COMPRESSEDSIZE - 1` bytes which will, depending on the value of the data flag, either need to be uncompressed, using the `LZF` decompression algorithm as found [here](https://invent.kde.org/graphics/krita/-/blob/master/libs/image/tiles3/swap/kis_lzf_compression.cpp), or used-as-is as to obtain the actual tile data.
 
 ## Data format
 
-After decompressing each of the tiles' data, the actual layer can be constructed by placing each of the tiles at its correct position as denoted by the `LEFT` and `TOP` attributes. Missing tiles denote regions in the layer without any content and are to be populated with the color space's zero value ( = 0000 for `RGBA`).
+After decompressing or copying-as-is each of the tiles' data, the actual layer can be constructed by placing each of the tiles at its correct position as denoted by the `LEFT` and `TOP` attributes. Missing tiles denote regions in the layer without any content and are to be populated with the color value of the default pixel of this layer ( = by default this is 0000 for `RGBA`).
 
 ### Channel order
 
