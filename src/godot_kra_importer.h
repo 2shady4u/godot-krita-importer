@@ -14,6 +14,10 @@
 
 namespace godot
 {
+    using kra::PAINT_LAYER;
+    using kra::GROUP_LAYER;
+    using kra::VECTOR_LAYER;
+
     class KraImporter : public RefCounted
     {
         GDCLASS(KraImporter, RefCounted)
@@ -55,5 +59,6 @@ namespace godot
 } //namespace godot
 
 VARIANT_ENUM_CAST(KraImporter::VerbosityLevel);
+VARIANT_ENUM_CAST(kra::LayerType);
 
 #endif // KRA_IMPORTER_H

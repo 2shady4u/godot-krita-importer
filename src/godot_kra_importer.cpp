@@ -23,6 +23,10 @@ void KraImporter::_bind_methods()
 	BIND_ENUM_CONSTANT(NORMAL);
 	BIND_ENUM_CONSTANT(VERBOSE);
 	BIND_ENUM_CONSTANT(VERY_VERBOSE);
+
+    BIND_ENUM_CONSTANT(PAINT_LAYER);
+    BIND_ENUM_CONSTANT(GROUP_LAYER);
+    BIND_ENUM_CONSTANT(VECTOR_LAYER);
 }
 
 KraImporter::KraImporter()
@@ -137,6 +141,16 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
             arr.push_back(uuid.c_str());
         }
         layer_data["child_uuids"] = arr;
+        break;
+    }
+    case kra::VECTOR_LAYER:
+    {
+        int size = exported_layer->svg_content.size();
+        PackedByteArray arr = PackedByteArray();
+        arr.resize(size);
+
+        memcpy((void *)arr.ptrw(), exported_layer->svg_content.data(), size);
+        layer_data["data"] = arr;
         break;
     }
     default:

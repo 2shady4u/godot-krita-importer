@@ -19,11 +19,11 @@ func _ready():
 		var layer_data : Dictionary = importer.get_layer_data_at(i)
 
 		match(layer_data.get("type", -1)):
-			0:
+			KraImporter.PAINT_LAYER:
 				var sprite : Sprite2D = import_plugin.import_paint_layer(layer_data, options, textures_dir)
 				if sprite != null:
 					add_child(sprite)
-			1:
+			KraImporter.GROUP_LAYER:
 				var child_node : Node2D = import_plugin.import_group_layer(importer, layer_data, options, textures_dir)
 				if child_node != null:
 					add_child(child_node)

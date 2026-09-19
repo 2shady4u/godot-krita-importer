@@ -15,7 +15,7 @@ var presets : Array[Dictionary] = [
 		"name": "texture_filter", 
 		"default_value": CanvasItem.TEXTURE_FILTER_PARENT_NODE,
 		"property_hint": PROPERTY_HINT_ENUM,
-		"hint_string": ",".join(range(0, CanvasItem.TEXTURE_FILTER_MAX))
+		"hint_string": "Inherit,Nearest,Linear,Nearest Mipmap,Linear Mipmap,Nearest Mipmap Anisotropic,Linear Mipmap Anisotropic"
 	},{
 		"name": "crop_to_visible", 
 		"default_value": true
@@ -76,11 +76,15 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 		var layer_data : Dictionary = importer.get_layer_data_at(i)
 
 		match(layer_data.get("type", -1)):
-			0:
+			KraImporter.PAINT_LAYER:
 				var sprite : Sprite2D = import_paint_layer(layer_data, options, textures_dir)
 				if sprite != null:
 					node.add_child(sprite)
-			1:
+			KraImporter.VECTOR_LAYER:
+				var sprite : Sprite2D = import_vector_layer(layer_data, options, textures_dir)
+				if sprite != null:
+					node.add_child(sprite)
+			KraImporter.GROUP_LAYER:
 				var child_node : Node2D = import_group_layer(importer, layer_data, options, textures_dir)
 				if child_node != null:
 					node.add_child(child_node)
@@ -148,12 +152,16 @@ static func import_group_layer(importer: KraImporter, layer_data: Dictionary, op
 		var uuid : String = child_uuids[i]
 		var child_data : Dictionary = importer.get_layer_data_with_uuid(uuid)
 		match(child_data.get("type", -1)):
-			0:
+			KraImporter.PAINT_LAYER:
 				var sprite : Sprite2D = import_paint_layer(child_data, options, textures_dir.path_join(node.name))
 				if sprite != null:
 					sprite.position -= node.position
 					node.add_child(sprite)
-			1:
+			KraImporter.VECTOR_LAYER:
+				var sprite : Sprite2D = import_vector_layer(layer_data, options, textures_dir.path_join(node.name))
+				if sprite != null:
+					node.add_child(sprite)
+			KraImporter.GROUP_LAYER:
 				var child_node : Node2D = import_group_layer(importer, child_data, options, textures_dir.path_join(node.name))
 				if child_node != null:
 					child_node.position -= node.position
@@ -161,7 +169,7 @@ static func import_group_layer(importer: KraImporter, layer_data: Dictionary, op
 
 	return node
 
-static func import_paint_layer(layer_data: Dictionary, options: Dictionary, textures_dir: String) -> Node2D:
+static func _import_spritable_layer(layer_data: Dictionary, options: Dictionary) -> Sprite2D:
 	var sprite = Sprite2D.new()
 	sprite.name = layer_data.get("name", sprite.name)
 	sprite.position = layer_data.get("position", Vector2.ZERO)
@@ -170,6 +178,13 @@ static func import_paint_layer(layer_data: Dictionary, options: Dictionary, text
 	if not sprite.visible and options.get("ignore_invisible_layers", false):
 		return null
 	sprite.modulate.a = layer_data.get("opacity", 255.0)/255.0
+
+	return sprite
+
+static func import_paint_layer(layer_data: Dictionary, options: Dictionary, textures_dir: String) -> Node2D:
+	var sprite = _import_spritable_layer(layer_data, options)
+	if sprite == null:
+		return null
 
 	#create_from_data(width: int, height: int, use_mipmaps: bool, format: Format, data: PoolByteArray)
 	var image = Image.create_from_data(layer_data.width, layer_data.height, false, layer_data.format, layer_data.data)
@@ -191,6 +206,41 @@ static func import_paint_layer(layer_data: Dictionary, options: Dictionary, text
 		DirAccess.make_dir_recursive_absolute(textures_dir)
 		var save_path: String = textures_dir.path_join("{name}.png".format({"name": sprite.name}))
 		image.save_png(save_path)
+		var texture = CompressedTexture2D.new()
+		texture.take_over_path(save_path)
+		sprite.texture = texture
+	else:
+		var texture = ImageTexture.create_from_image(image)
+		sprite.texture = texture
+
+	return sprite
+
+static func import_vector_layer(layer_data: Dictionary, options: Dictionary, textures_dir: String) -> Node2D:
+	var sprite = _import_spritable_layer(layer_data, options)
+	if sprite == null:
+		return null
+
+	var image := Image.new()
+	var error := image.load_svg_from_buffer(layer_data.data)
+
+	#if options.get("crop_to_visible", true):
+		#var visible_region = image.get_used_rect()
+		#image = image.get_region(visible_region)
+		#sprite.position += Vector2(visible_region.position)
+
+	if options.get("center_sprites", true):
+		sprite.position += Vector2(image.get_size())/2.0
+		sprite.centered = true
+	else:
+		sprite.centered = false
+
+	sprite.texture_filter = options.get("texture_filter", CanvasItem.TEXTURE_FILTER_PARENT_NODE)
+	if options.get("import_as_files", false):
+		# Make sure the path exists
+		DirAccess.make_dir_recursive_absolute(textures_dir)
+		var save_path: String = textures_dir.path_join("{name}.svg".format({"name": sprite.name}))
+		var file := FileAccess.open(save_path, FileAccess.WRITE)
+		file.store_buffer(layer_data.data)
 		var texture = CompressedTexture2D.new()
 		texture.take_over_path(save_path)
 		sprite.texture = texture
