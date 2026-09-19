@@ -10,7 +10,6 @@ env:
   PROJECT_FOLDER: .
   TARGET_PATH: demo/addons/godot-krita-importer/bin/
   TARGET_NAME: libkra_importer
-  VAR_PATH: .github/workflows/build_var.json
   SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
   GODOT_VERSION: 4.7.1
 
@@ -67,18 +66,8 @@ jobs:
           python --version
           scons --version
 
-      - name: Windows Compilation
-        if: runner.os == 'Windows'
-        run: |
-          if(-Not (Test-Path -Path ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}))
-          {
-            mkdir ${{ env.PROJECT_FOLDER }}\${{ env.TARGET_PATH }}
-          }
-          cd ${{ env.PROJECT_FOLDER }}
-          scons platform=windows target=${{ matrix.target }} target_path=${{ env.TARGET_PATH }} target_name=${{ env.TARGET_NAME }} -j6 ${{ matrix.flags }}
-
-      - name: Linux or MacOS Compilation
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      - name: Compilation
+        shell: bash
         run: |
           mkdir -v -p ${{ env.PROJECT_FOLDER }}/${{ env.TARGET_PATH }}
           cd ${{ env.PROJECT_FOLDER }}
