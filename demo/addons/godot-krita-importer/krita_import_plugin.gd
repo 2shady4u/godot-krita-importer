@@ -25,6 +25,11 @@ var presets : Array[Dictionary] = [
 	},{
 		"name": "import_as_files", 
 		"default_value": false
+	},{
+		"name": "svg/scale",
+		"default_value": 1.0,
+		"property_hint": PROPERTY_HINT_RANGE,
+		"hint_string": "0.1,100.0"
 	}
 ]
 
@@ -121,7 +126,7 @@ static func purge_obsolete_textures_recursively(save_dir: String, allowed_files:
 		return
 
 	for file in DirAccess.get_files_at(save_dir):
-		if not ["png"].has(file.get_extension()):
+		if not file.get_extension() in ["png", "svg"]:
 			continue
 
 		var file_path := save_dir.path_join(file)
@@ -182,6 +187,10 @@ static func _import_spritable_layer(layer_data: Dictionary, options: Dictionary)
 	return sprite
 
 static func import_paint_layer(layer_data: Dictionary, options: Dictionary, textures_dir: String) -> Node2D:
+	if layer_data.data.is_empty():
+		print("WARNING: Skipping empty layer with name '%s'." % [layer_data.name])
+		return null
+
 	var sprite = _import_spritable_layer(layer_data, options)
 	if sprite == null:
 		return null
@@ -220,13 +229,10 @@ static func import_vector_layer(layer_data: Dictionary, options: Dictionary, tex
 	if sprite == null:
 		return null
 
+	# Convert between the DPI used by Krita's document and the default DPI of Godot
+	var dpi_conversion: float = layer_data.x_res / 96
 	var image := Image.new()
-	var error := image.load_svg_from_buffer(layer_data.data)
-
-	#if options.get("crop_to_visible", true):
-		#var visible_region = image.get_used_rect()
-		#image = image.get_region(visible_region)
-		#sprite.position += Vector2(visible_region.position)
+	var error := image.load_svg_from_buffer(layer_data.svg_content, options["svg/scale"] * dpi_conversion)
 
 	if options.get("center_sprites", true):
 		sprite.position += Vector2(image.get_size())/2.0
@@ -240,7 +246,7 @@ static func import_vector_layer(layer_data: Dictionary, options: Dictionary, tex
 		DirAccess.make_dir_recursive_absolute(textures_dir)
 		var save_path: String = textures_dir.path_join("{name}.svg".format({"name": sprite.name}))
 		var file := FileAccess.open(save_path, FileAccess.WRITE)
-		file.store_buffer(layer_data.data)
+		file.store_buffer(layer_data.svg_content)
 		var texture = CompressedTexture2D.new()
 		texture.take_over_path(save_path)
 		sprite.texture = texture

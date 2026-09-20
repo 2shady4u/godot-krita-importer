@@ -145,12 +145,15 @@ Dictionary KraImporter::_get_layer_data(const std::unique_ptr<kra::ExportedLayer
     }
     case kra::VECTOR_LAYER:
     {
+        layer_data["x_res"] = document->x_res;
+        layer_data["y_res"] = document->y_res;
+
         int size = exported_layer->svg_content.size();
         PackedByteArray arr = PackedByteArray();
         arr.resize(size);
 
         memcpy((void *)arr.ptrw(), exported_layer->svg_content.data(), size);
-        layer_data["data"] = arr;
+        layer_data["svg_content"] = arr;
         break;
     }
     default:
